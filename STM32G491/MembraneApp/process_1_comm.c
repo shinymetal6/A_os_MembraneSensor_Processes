@@ -33,15 +33,16 @@
 #include "membrane_includes.h"
 
 MembraneSystem_TypeDef			MembraneSystem;
-uint8_t 						uart_rx_buffer[SENSORS_RX_LEN+10];
+uint8_t 						uart_rx_buffer[SENSORS_RX_LEN266+10];
 
 extern	MembraneInfo_TypeDef	MembraneInfo;
+extern	uint8_t					reprog_data_area[FLASHRAM_SIZE];
 uint8_t							mailbox_out[PRC1_MAILBOX_LEN];
 
 void process_1_comm(uint32_t process_id)
 {
 uint32_t	wakeup,flags;
-
+uint8_t		flash_counter;
 	allocate_hw(HW_UART1,0);
 	hw_receive_uart(HW_UART1,&MembraneSystem.sensor_rxchar,1,1000);
 	MembraneSystem.sensor_rxindex = 0;
@@ -51,7 +52,7 @@ uint32_t	wakeup,flags;
 	mailbox_out[3] = 0xef;
 
 	clear_flash_area();
-	create_timer(TIMER_ID_0,500,TIMERFLAGS_FOREVER | TIMERFLAGS_ENABLED);
+	create_timer(TIMER_ID_0,100,TIMERFLAGS_FOREVER | TIMERFLAGS_ENABLED);
 	MembraneSystem.sensor_rxstate = SENSORS_WAIT_INITIATOR_CHAR;
 
 	while(1)
@@ -62,6 +63,14 @@ uint32_t	wakeup,flags;
 
 		if (( wakeup & WAKEUP_FROM_TIMER) == WAKEUP_FROM_TIMER)
 		{
+			if (( MembraneSystem.flash_flags & (FLASH_READY2FLASH |FLASH_PROG_START ) ) == (FLASH_READY2FLASH | FLASH_PROG_START))
+			{
+				flash_counter--;
+				if ( flash_counter == 0 )
+					do_flash_update((uint8_t *)&reprog_data_area,FLASHRAM_SIZE-FLASH_PARAMETER_SIZE);
+			}
+			else
+				flash_counter = 5;
 		}
 		if (( wakeup & WAKEUP_FROM_UART1_IRQ) == WAKEUP_FROM_UART1_IRQ)
 		{

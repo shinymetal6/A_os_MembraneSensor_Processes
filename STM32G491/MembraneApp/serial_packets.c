@@ -47,19 +47,13 @@ uint32_t sensor_check_bitsindex;
 
 uint8_t packet_assemble(void)
 {
-	/*
-	 * returns:
-	 * PKT_NOT_COMPLETE 	: packet not yet completed
-	 * UPD_INFOPKT_COMPLETE : update info packet complete
-	 * UPD_PKT_COMPLETE 	: update packet complete
-	 * UPD_PKT_STATREQUEST	: received a stratus request for flash, send reply
-	 * CMD_PKT_COMPLETE 	: command packet complete
-	 */
+uint8_t ret_val = PKT_NOT_COMPLETE;
+
 	if ( MembraneSystem.sensor_rxstate == SENSORS_WAIT_INITIATOR_CHAR)
 	{
 		if(MembraneSystem.sensor_rxchar == SENSORS_INITIATOR_CHAR)
 		{
-			bzero(MembraneSystem.sensor_rxbuf,SENSORS_RX_LEN);
+			bzero(MembraneSystem.sensor_rxbuf,SENSORS_RX_LEN266);
 			MembraneSystem.sensor_rxbuf[0] = SENSORS_INITIATOR_CHAR;
 			MembraneSystem.sensor_rxstate = SENSORS_DATA_PHASE;
 			MembraneSystem.sensor_rxindex = 1;
@@ -70,88 +64,69 @@ uint8_t packet_assemble(void)
 		MembraneSystem.sensor_rxbuf[MembraneSystem.sensor_rxindex] = MembraneSystem.sensor_rxchar;
 		if ( MembraneSystem.sensor_rxindex == 1)
 		{
-			if ( MembraneSystem.sensor_rxchar == DOWNLOAD_COMMAND )
+			switch(MembraneSystem.sensor_rxbuf[1])
 			{
-				MembraneSystem.sensor_rxstate = SENSORS_UPDATE_PACKET_PHASE;
-				MembraneSystem.sensor_total_rxcount = SENSORS_RX_LEN;
-			}
-			if ( MembraneSystem.sensor_rxchar == SINGLE_PACKET_DOWNLOAD_COMMAND )
-			{
-				MembraneSystem.sensor_rxstate = SENSORS_UPDATE_SINGLE_PACKET_PHASE;
-				MembraneSystem.sensor_total_rxcount = SENSORS_RX_LEN;
-			}
-			else if ( MembraneSystem.sensor_rxchar == DOWNLOAD_PREPARE_COMMAND )
-			{
-				MembraneSystem.sensor_rxstate = SENSORS_UPDATEINFO_PACKET_PHASE;
-				MembraneSystem.sensor_total_rxcount = SENSORS_RX_LEN;
-			}
-			else if ( MembraneSystem.sensor_rxchar == DOWNLOAD_CHECK_COMMAND )
-			{
-				MembraneSystem.sensor_rxstate = SENSORS_UPDATE_CHECK_PHASE;
-				MembraneSystem.sensor_total_rxcount = SENSORS_RX_LEN;
-			}
-			else
-			{
-				MembraneSystem.sensor_rxstate = SENSORS_ACQUISITION_PACKET_PHASE;
-				MembraneSystem.sensor_total_rxcount = SENSORS_RX_CMDLEN;
+			case DOWNLOAD_COMMAND :
+			case SINGLE_PACKET_DOWNLOAD_COMMAND :
+			case DOWNLOAD_PREPARE_COMMAND :
+				MembraneSystem.sensor_total_rxcount = SENSORS_RX_LEN266;
+				break;
+			case DOWNLOAD_CHECK_COMMAND :
+			case WRITE_FLASH_COMMAND :
+			case SENSORS_DISCOVERY :
+			case SENSORS_GET_DATA :
+				MembraneSystem.sensor_total_rxcount = SENSORS_RX_CMDLEN4;
+				break;
+			default:
+				MembraneSystem.sensor_rxstate = SENSORS_WAIT_INITIATOR_CHAR;
 			}
 			MembraneSystem.sensor_rxindex = 2;
 		}
 		else
 		{
+			MembraneSystem.sensor_rxbuf[MembraneSystem.sensor_rxindex] = MembraneSystem.sensor_rxchar;
 			MembraneSystem.sensor_rxindex ++;
-			if ( MembraneSystem.sensor_rxindex > SENSORS_UPDATE_LEN )
+			if ( MembraneSystem.sensor_rxindex == (MembraneSystem.sensor_total_rxcount))
 			{
-				MembraneSystem.sensor_rxstate = SENSORS_WAIT_INITIATOR_CHAR;
-				return PKT_NOT_COMPLETE;
-			}
-
-			if ( MembraneSystem.sensor_rxstate == SENSORS_UPDATE_PACKET_PHASE)
-			{
-				if ( MembraneSystem.sensor_rxindex >= SENSORS_RX_LEN)
+				switch(MembraneSystem.sensor_rxbuf[1])
 				{
-					MembraneSystem.sensor_rxstate = SENSORS_WAIT_INITIATOR_CHAR;
-					return UPD_PKT_COMPLETE;
-				}
-			}
-			if ( MembraneSystem.sensor_rxstate == SENSORS_UPDATE_SINGLE_PACKET_PHASE)
-			{
-				if (MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS] == MembraneInfo.board_address)
-				{
-					if ( MembraneSystem.sensor_rxindex >= SENSORS_RX_LEN)
-					{
-						MembraneSystem.sensor_rxstate = SENSORS_WAIT_INITIATOR_CHAR;
-						return UPD_SINGLE_PKT_COMPLETE;
-					}
-				}
-			}
-			if ( MembraneSystem.sensor_rxstate == SENSORS_UPDATEINFO_PACKET_PHASE)
-			{
-				if ( MembraneSystem.sensor_rxchar == SENSORS_TERMINATOR_CHAR)
-				{
-					MembraneSystem.sensor_rxstate = SENSORS_WAIT_INITIATOR_CHAR;
-					return UPD_INFOPKT_COMPLETE;
-				}
-			}
-			if ( MembraneSystem.sensor_rxstate == SENSORS_UPDATE_CHECK_PHASE)
-			{
-				if ( MembraneSystem.sensor_rxchar == SENSORS_TERMINATOR_CHAR)
-				{
-					MembraneSystem.sensor_rxstate = SENSORS_WAIT_INITIATOR_CHAR;
-					return UPD_PKT_STATREQUEST;
-				}
-			}
-			if ( MembraneSystem.sensor_rxstate == SENSORS_ACQUISITION_PACKET_PHASE)
-			{
-				if ( MembraneSystem.sensor_rxchar == SENSORS_TERMINATOR_CHAR)
-				{
-					MembraneSystem.sensor_rxstate = SENSORS_WAIT_INITIATOR_CHAR;
-					return CMD_PKT_COMPLETE;
+				case DOWNLOAD_COMMAND :
+					ret_val = UPD_PKT_COMPLETE;
+					break;
+				case SINGLE_PACKET_DOWNLOAD_COMMAND :
+					ret_val = UPD_SINGLE_PKT_COMPLETE;
+					break;
+				case DOWNLOAD_PREPARE_COMMAND :
+					ret_val = UPD_INFOPKT_COMPLETE;
+					break;
+				case DOWNLOAD_CHECK_COMMAND :
+					ret_val = UPD_PKT_STATREQUEST;
+					break;
+				case WRITE_FLASH_COMMAND :
+					ret_val = UPD_START_FLASH;
+					break;
+				case SENSORS_DISCOVERY :
+				case SENSORS_GET_DATA :
+					ret_val = CMD_PKT_COMPLETE;
+					break;
+				default:
+					ret_val = PKT_NOT_COMPLETE;
 				}
 			}
 		}
 	}
-	return PKT_NOT_COMPLETE;
+	if ( ret_val != PKT_NOT_COMPLETE)
+	{
+		MembraneSystem.sensor_rxstate = SENSORS_WAIT_INITIATOR_CHAR;
+		if ((MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS] != SENSORS_BROADCAST_ADDR) && ( MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS] != MembraneInfo.board_address))
+		{
+			ret_val = PKT_NOT_COMPLETE;
+		}
+		else
+			MembraneSystem.sensor_addressed_sensor = MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS];
+
+	}
+	return ret_val;
 }
 
 uint32_t		updsingle_ptr;
@@ -160,9 +135,6 @@ void update_packet_process(uint8_t assemble_result)
 {
 int 		pnum;
 uint32_t	i;
-
-	if ((MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS] == SENSORS_BROADCAST_ADDR) && ( MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS] == MembraneInfo.board_address))
-		return;
 
 	if ( assemble_result == UPD_INFOPKT_COMPLETE )
 	{
@@ -240,13 +212,15 @@ uint32_t	i;
 	{
 		if (( MembraneSystem.flash_flags & FLASH_READY2FLASH) == FLASH_READY2FLASH)
 		{
-			MembraneSystem.work_sensor_txbuf[0] = SENSORS_INITIATOR_CHAR;
-			MembraneSystem.work_sensor_txbuf[1] = DOWNLOAD_FLASH_COMMAND;
-			MembraneSystem.work_sensor_txbuf[2] = MembraneInfo.board_address;
-			MembraneSystem.work_sensor_txbuf[3] = SENSORS_TERMINATOR_CHAR;
-			MembraneSystem.work_sensor_txbuflen = 4;
-			HAL_Delay(100);
-			//do_flash_update((uint8_t *)&reprog_data_area,FLASHRAM_SIZE-FLASH_PARAMETER_SIZE);
+			if ( MembraneSystem.sensor_addressed_sensor != SENSORS_BROADCAST_ADDR)
+			{
+				MembraneSystem.flash_flags |= FLASH_PROG_START;
+				MembraneSystem.work_sensor_txbuf[0] = SENSORS_INITIATOR_CHAR;
+				MembraneSystem.work_sensor_txbuf[1] = DOWNLOAD_FLASH_COMMAND;
+				MembraneSystem.work_sensor_txbuf[2] = MembraneInfo.board_address;
+				MembraneSystem.work_sensor_txbuf[3] = SENSORS_TERMINATOR_CHAR;
+				MembraneSystem.work_sensor_txbuflen = 4;
+			}
 		}
 	}
 	else if ( assemble_result == UPD_SINGLE_PKT_COMPLETE )
@@ -287,20 +261,23 @@ uint8_t ret_val = 1;
 				MembraneSystem.work_sensor_txbuf[1] = SENSORS_GET_DATA_COMMAND_REPLY;
 				MembraneSystem.work_sensor_txbuf[2] = MembraneInfo.board_address;
 				MembraneSystem.work_sensor_txbuf[3] = SENSORS_BOARD_TYPE;
-				MembraneSystem.work_sensor_txbuf[4] = 'C';
-				MembraneSystem.work_sensor_txbuf[5] = AcqSystem.calibration_value >> 8;
-				MembraneSystem.work_sensor_txbuf[6] = AcqSystem.calibration_value & 0xff;
-				MembraneSystem.work_sensor_txbuf[7] = 'W';
-				MembraneSystem.work_sensor_txbuf[8] = AcqSystem.conductivity_value >> 8;
-				MembraneSystem.work_sensor_txbuf[9] = AcqSystem.conductivity_value & 0xff;
+				MembraneSystem.work_sensor_txbuf[4] = 'W';
+				MembraneSystem.work_sensor_txbuf[5] = AcqSystem.conductivity_value >> 8;
+				MembraneSystem.work_sensor_txbuf[6] = AcqSystem.conductivity_value & 0xff;
+				MembraneSystem.work_sensor_txbuf[7] = 'K';
+				MembraneSystem.work_sensor_txbuf[8] = 0;
+				MembraneSystem.work_sensor_txbuf[9] = (1 << AcqSystem.internal_scale_factor) & 0xff;
 				MembraneSystem.work_sensor_txbuf[10] = 'S';
-				MembraneSystem.work_sensor_txbuf[11] = AcqSystem.acquisition_steady_value >> 8;
-				MembraneSystem.work_sensor_txbuf[12] = AcqSystem.acquisition_steady_value & 0xff;
-				MembraneSystem.work_sensor_txbuf[13] = 'T';
-				MembraneSystem.work_sensor_txbuf[14] = AcqSystem.temperature_data >> 8;
-				MembraneSystem.work_sensor_txbuf[15] = AcqSystem.temperature_data & 0xff;
-				MembraneSystem.work_sensor_txbuf[16] = SENSORS_TERMINATOR_CHAR;
-				MembraneSystem.work_sensor_txbuflen = 17;
+				MembraneSystem.work_sensor_txbuf[11] = AcqSystem.dac_out_value >> 8;
+				MembraneSystem.work_sensor_txbuf[12] = AcqSystem.dac_out_value & 0xff;
+				MembraneSystem.work_sensor_txbuf[13] = 'C';
+				MembraneSystem.work_sensor_txbuf[14] = AcqSystem.calibration_value >> 8;
+				MembraneSystem.work_sensor_txbuf[15] = AcqSystem.calibration_value & 0xff;
+				MembraneSystem.work_sensor_txbuf[16] = 'T';
+				MembraneSystem.work_sensor_txbuf[17] = AcqSystem.temperature_data >> 8;
+				MembraneSystem.work_sensor_txbuf[18] = AcqSystem.temperature_data & 0xff;
+				MembraneSystem.work_sensor_txbuf[19] = SENSORS_TERMINATOR_CHAR;
+				MembraneSystem.work_sensor_txbuflen = 20;
 				ret_val = 0;
 				break;
 			case SENSORS_DISCOVERY :

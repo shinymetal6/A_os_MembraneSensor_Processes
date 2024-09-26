@@ -36,8 +36,8 @@ __attribute__ ((aligned (32))) uint16_t steady_dac_tab[MEMBRANE_DAC_WAVETABLE_SI
 __attribute__ ((aligned (32))) uint16_t closing_dac_tab[MEMBRANE_DAC_WAVETABLE_SIZE];
 __attribute__ ((aligned (32))) uint16_t calibration_dac_tab[MEMBRANE_DAC_WAVETABLE_SIZE];
 
-__attribute__ ((aligned (32))) uint16_t	calibration_results[MEMBRANE_DAC_WAVETABLE_SIZE];
-__attribute__ ((aligned (32))) uint16_t	acquisition_results[MEMBRANE_DAC_WAVETABLE_SIZE];
+__attribute__ ((aligned (32))) uint16_t	calibration_results[ADC_NUM_CALIBRATION_CYCLES];
+__attribute__ ((aligned (32))) uint16_t	acquisition_results[ADC_NUM_ACQUISITION_CYCLES];
 
 
 __attribute__ ((aligned (32))) const uint16_t initial_dac_sine_tab[MEMBRANE_DAC_WAVETABLE_SIZE] =
@@ -89,8 +89,9 @@ void algo_init(void)
 {
 uint32_t	i;
 
-	AcqSystem.acquisition_steady_value = STEADY_VALUE;
-	update_steady_dac_tab(AcqSystem.acquisition_steady_value);
+	AcqSystem.dac_out_value = STEADY_VALUE;
+	AcqSystem.internal_scale_factor = 0;
+	update_steady_dac_tab(AcqSystem.dac_out_value);
 
 	for(i=0;i<MEMBRANE_DAC_WAVETABLE_SIZE;i++)
 		calibration_dac_tab[i] = CALIBRATION_VALUE;
@@ -98,12 +99,6 @@ uint32_t	i;
 		closing_dac_tab[i] = 0;
 
 	AcqSystem.dac_state_machine = DAC_STATE_IDLE;
-
-	AcqSystem.calibration_wndlow  = ( DAC_NUM_CALIBRATION/2)   	*MEMBRANE_DAC_WAVETABLE_SIZE;
-	AcqSystem.calibration_wndhigh = ((DAC_NUM_CALIBRATION/2)	*MEMBRANE_DAC_WAVETABLE_SIZE) + MEMBRANE_DAC_WAVETABLE_SIZE;
-	AcqSystem.acquisition_wndlow  = ( DAC_NUM_STEADY/2)        	*MEMBRANE_DAC_WAVETABLE_SIZE;
-	AcqSystem.acquisition_wndhigh = ((DAC_NUM_STEADY/2)     	*MEMBRANE_DAC_WAVETABLE_SIZE) + MEMBRANE_DAC_WAVETABLE_SIZE;
-
 }
 
 void algo_run_acquisition(void)
@@ -122,18 +117,6 @@ void algo_set_dac_complete(void)
 	AcqSystem.acquisition_status |= ACQ_DAC_CYCLE_COMPLETE;
 }
 
-uint8_t equal = 0;
-void update_dac_out(void)
-{
-	if ( AcqSystem.conductivity_value < IDEAL_VALUE )
-		AcqSystem.acquisition_steady_value += 5;
-	else if ( AcqSystem.conductivity_value > IDEAL_VALUE )
-		AcqSystem.acquisition_steady_value -= 5;
-	else
-		equal++;
-	update_steady_dac_tab( AcqSystem.acquisition_steady_value );
-}
-
 void algo_periodic_worker(void)
 {
 	if (( AcqSystem.acquisition_status & ACQ_DAC_RUN) == ACQ_DAC_RUN)
@@ -147,20 +130,22 @@ void algo_periodic_worker(void)
 			IntDac_Start(DAC_NUM_CALIBRATION,DAC_STOP_AT_END | DAC_WAKEUP_AT_CYCLE);
 
 			AcqSystem.acquisition_status &= ~(ACQ_ADC_RUN | ACQ_DAC_CYCLE_COMPLETE);
-			AcqSystem.operation_counter = 0;
+			AcqSystem.operation_counter = DAC_NUM_CALIBRATION;
 
 			IntAdc_Start(HW_ADC2);
+			AcqSystem.cycle_operation_counter = 0;
 			AcqSystem.dac_state_machine = DAC_STATE_CALIBRATION;
 			break;
 		case	DAC_STATE_CALIBRATION :
-			if (( AcqSystem.acquisition_status & ACQ_ADC_CALIBRATED ) == ACQ_ADC_CALIBRATED)
+			if (( AcqSystem.acquisition_status & ACQ_DAC_CYCLE_COMPLETE ) == ACQ_DAC_CYCLE_COMPLETE)
 			{
-				AcqSystem.operation_counter = 0;
 				IntAdc_Stop(HW_ADC2);
+				IntDac_Stop();
 				IntAdc_Start(HW_ADC1);
 
-				IntDac_Stop();
 				compile_table_val((uint16_t  *)initial_dac_sine_tab);
+				AcqSystem.operation_counter = DAC_NUM_SINES;
+				AcqSystem.cycle_operation_counter = 0;
 				IntDac_Start(DAC_NUM_SINES,DAC_STOP_AT_END | DAC_WAKEUP_AT_CYCLE);
 
 				AcqSystem.acquisition_status &= ~ACQ_DAC_CYCLE_COMPLETE;
@@ -171,21 +156,22 @@ void algo_periodic_worker(void)
 			if (( AcqSystem.acquisition_status & ACQ_DAC_CYCLE_COMPLETE ) == ACQ_DAC_CYCLE_COMPLETE)
 			{
 				AcqSystem.acquisition_status &= ~ACQ_DAC_CYCLE_COMPLETE;
-				AcqSystem.operation_counter = 0;
+				AcqSystem.operation_counter = DAC_NUM_ACQUISITION;
+				AcqSystem.cycle_operation_counter = 0;
 				IntDac_Stop();
 				compile_table_val(steady_dac_tab);
-				IntDac_Start(DAC_NUM_STEADY,DAC_STOP_AT_END | DAC_WAKEUP_AT_CYCLE);
+				IntDac_Start(DAC_NUM_ACQUISITION,DAC_STOP_AT_END | DAC_WAKEUP_AT_CYCLE);
 
 				AcqSystem.acquisition_status |= ACQ_ADC_RUN;
 				AcqSystem.dac_state_machine = DAC_STATE_ACQUISITION;
 			}
 			break;
 		case	DAC_STATE_ACQUISITION :
-			if (( AcqSystem.acquisition_status & ACQ_ADC_CYCLE_COMPLETE ) == ACQ_ADC_CYCLE_COMPLETE)
+			if (( AcqSystem.acquisition_status & ACQ_DAC_CYCLE_COMPLETE ) == ACQ_DAC_CYCLE_COMPLETE)
 			{
 				IntAdc_Stop(HW_ADC1);
-
 				IntDac_Stop();
+
 				compile_table_val(closing_dac_tab);
 				IntDac_Start(DAC_NUM_CLOSING,DAC_STOP_AT_END | DAC_WAKEUP_AT_CYCLE | DAC_3ST_AT_END);
 
@@ -203,7 +189,6 @@ void algo_periodic_worker(void)
 		case	DAC_STATE_CYCLE_END :
 			AcqSystem.dac_state_machine = DAC_STATE_IDLE;
 			AcqSystem.acquisition_status = ACQ_COMPLETE;
-			update_dac_out();
 			break;
 		}
 	}
@@ -212,17 +197,22 @@ void algo_periodic_worker(void)
 void algo_calibration_worker(void)
 {
 uint32_t	i;
-	AcqSystem.operation_counter++;
-	if (( AcqSystem.operation_counter >= AcqSystem.calibration_wndlow) && ( AcqSystem.operation_counter <= AcqSystem.calibration_wndhigh))
-		calibration_results[AcqSystem.operation_counter-AcqSystem.calibration_wndlow] = calibration_buffer[DAC_DIRECT_INDEX];
-	if ( AcqSystem.operation_counter >= AcqSystem.calibration_wndhigh)
+	if (( AcqSystem.acquisition_status & ACQ_ADC_CALIBRATED ) == 0 )
 	{
-		AcqSystem.acquisition_status |= ACQ_ADC_CALIBRATED;
-		AcqSystem.calibration_value = 0;
-		for(i=0;i<MEMBRANE_DAC_WAVETABLE_SIZE;i++)
-			AcqSystem.calibration_value += calibration_results[i];
-		AcqSystem.calibration_value /= MEMBRANE_DAC_WAVETABLE_SIZE;
-		//AcqSystem.calibration_value = CALIBRATION_VALUE - AcqSystem.calibration_value;
+		calibration_results[AcqSystem.cycle_operation_counter & 0xff] = calibration_buffer[DAC_DIRECT_INDEX];
+		if (AcqSystem.cycle_operation_counter >= ADC_NUM_CALIBRATION_CYCLES)
+		{
+			AcqSystem.acquisition_status |= ACQ_ADC_CALIBRATED;
+			AcqSystem.calibration_value = 0;
+			for(i=0;i<ADC_NUM_CALIBRATION_CYCLES;i++)
+				AcqSystem.calibration_value += calibration_results[i];
+			AcqSystem.calibration_value /= ADC_NUM_CALIBRATION_CYCLES;
+			if ( AcqSystem.calibration_value > CALIBRATION_VALUE)
+				AcqSystem.calibration_value -= CALIBRATION_VALUE;
+			else
+				AcqSystem.calibration_value = CALIBRATION_VALUE - AcqSystem.calibration_value;
+		}
+		AcqSystem.cycle_operation_counter++;
 	}
 }
 
@@ -230,26 +220,33 @@ void algo_acquisition_worker(void)
 {
 uint32_t	i;
 
-	AcqSystem.operation_counter++;
-	if ( AcqSystem.operation_counter == AcqSystem.acquisition_wndlow)
+	if (( AcqSystem.acquisition_status & ACQ_ADC_CYCLE_COMPLETE ) == 0 )
 	{
-		AcqSystem.vrefint_data     = __LL_ADC_CALC_VREFANALOG_VOLTAGE(analog_buffer[DAC_VREFINT_INDEX], LL_ADC_RESOLUTION_12B);
-		AcqSystem.temperature_data = __LL_ADC_CALC_TEMPERATURE(AcqSystem.vrefint_data, analog_buffer[DAC_TEMPERATURE_INDEX], LL_ADC_RESOLUTION_12B);
-	}
-	if (( AcqSystem.operation_counter >= AcqSystem.acquisition_wndlow) && ( AcqSystem.operation_counter < AcqSystem.acquisition_wndhigh))
-	{
-		acquisition_results[AcqSystem.operation_counter-AcqSystem.acquisition_wndlow] = analog_buffer[DAC_VALUE_INDEX];
-	}
-	if ( AcqSystem.operation_counter == AcqSystem.acquisition_wndhigh)
-	{
-		AcqSystem.conductivity_value = 0;
-		for(i=0;i<MEMBRANE_DAC_WAVETABLE_SIZE;i++)
-			AcqSystem.conductivity_value += (acquisition_results[i] - AcqSystem.calibration_value);
-		AcqSystem.conductivity_value /= MEMBRANE_DAC_WAVETABLE_SIZE;
-	}
-	if ( AcqSystem.operation_counter == AcqSystem.acquisition_wndhigh + 1)
-	{
-		AcqSystem.acquisition_status |= ACQ_ADC_CYCLE_COMPLETE;
+		acquisition_results[AcqSystem.cycle_operation_counter & 0xff] = analog_buffer[DAC_ANALOG_INDEX];
+		if (AcqSystem.cycle_operation_counter >= ADC_NUM_ACQUISITION_CYCLES)
+		{
+			AcqSystem.acquisition_status |= ACQ_ADC_CYCLE_COMPLETE;
+			AcqSystem.conductivity_value = 0;
+			for(i=0;i<ADC_NUM_ACQUISITION_CYCLES;i++)
+				AcqSystem.conductivity_value += acquisition_results[i];
+			AcqSystem.conductivity_value /= ADC_NUM_ACQUISITION_CYCLES;
+			if ( AcqSystem.conductivity_value < MINIMUM_THRESHOLD)
+			{
+				if ( AcqSystem.internal_scale_factor < 6)
+					AcqSystem.internal_scale_factor ++;
+			}
+			if ( AcqSystem.conductivity_value > MAXIMUM_THRESHOLD)
+			{
+				if ( AcqSystem.internal_scale_factor )
+					AcqSystem.internal_scale_factor --;
+			}
+			IntAdc_OpAmpGain(AcqSystem.internal_scale_factor);
+			AcqSystem.conductivity_value = DAC_MAX_VALUE - AcqSystem.conductivity_value;
+			AcqSystem.vrefint_data     = __LL_ADC_CALC_VREFANALOG_VOLTAGE(analog_buffer[DAC_VREFINT_INDEX], LL_ADC_RESOLUTION_12B);
+			AcqSystem.temperature_data = __LL_ADC_CALC_TEMPERATURE(AcqSystem.vrefint_data, analog_buffer[DAC_TEMPERATURE_INDEX], LL_ADC_RESOLUTION_12B);
+			AcqSystem.temperature_data -= 5;
+		}
+		AcqSystem.cycle_operation_counter++;
 	}
 }
 

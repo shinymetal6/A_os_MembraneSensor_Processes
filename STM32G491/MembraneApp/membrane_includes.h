@@ -30,7 +30,7 @@
 extern	CRC_HandleTypeDef hcrc;
 #define	FLASH_CRC	hcrc
 
-#define		APP_NAME				"G491 IsFLASHED"
+#define		APP_NAME				"G491 IsNowFLASHED"
 #define		MAX_SENSORS				16
 #define		MAX_LINES				4
 #define		MAX_BOARDS				4
@@ -47,16 +47,17 @@ extern	CRC_HandleTypeDef hcrc;
 #define		MAILBOX_LEN				32
 #define		SENSORS_TX_LEN			32
 #define		SAMPLES_LEN				32
-#define		SENSORS_RX_LEN			266
+#define		SENSORS_RX_LEN266		266
 #define		SENSORS_RX_CMDLEN		64
+#define		SENSORS_RX_CMDLEN4		4
 #define		SENSORS_RX_TIMEOUT		10
 #define		SENSORS_RX_DISABLE		4
 #define		SENSORS_BROADCAST_ADDR	0xff
 
-#define		PRC1_TIMER_INTERVAL	100
+#define		PRC1_TIMER_INTERVAL			100
 
-#define		SENSORS_UPDATE_LEN		SENSORS_RX_LEN	// <DAC[256 bytes data][4 bytes CRC32]D> , crc is on bytes data only
-#define		SENSORS_UPDATE_PAYLOAD	256
+#define		SENSORS_UPDATE_LEN			SENSORS_RX_LEN266	// <DAC[256 bytes data][4 bytes CRC32]D> , crc is on bytes data only
+#define		SENSORS_UPDATE_PAYLOAD		256
 #define		SENSORS_INITIATOR			0
 #define		SENSORS_CMD					1
 #define		SENSORS_ADDRESS				2
@@ -94,6 +95,7 @@ extern	CRC_HandleTypeDef hcrc;
 #define	SINGLE_PACKET_DOWNLOAD_COMMAND		'S'
 #define	DOWNLOAD_CHECK_COMMAND				'C'
 #define	DOWNLOAD_FLASH_COMMAND				'F'
+#define	WRITE_FLASH_COMMAND					'W'
 #define	SENSORS_GET_DATA					'A'
 #define	SENSORS_DISCOVERY					'Z'
 #define	SENSORS_INITIATOR_CHAR				'<'
@@ -113,11 +115,12 @@ extern	CRC_HandleTypeDef hcrc;
 typedef struct
 {
 	uint8_t 		sensors_status;
-	uint8_t 		sensor_rxbuf[SENSORS_RX_LEN];
+	uint8_t 		sensor_rxbuf[SENSORS_RX_LEN266];
 	uint8_t 		sensor_rxchar;
 	uint32_t 		sensor_rxindex;
 	uint32_t 		sensor_total_rxcount;
 	uint8_t 		sensor_rxstate;
+	uint8_t 		sensor_addressed_sensor;
 	char			sensor_txbuf[SENSORS_TX_LEN];
 	char			work_sensor_txbuf[SENSORS_TX_LEN];
 	uint32_t 		work_sensor_txbuflen;
@@ -155,14 +158,12 @@ typedef struct
 	uint8_t 		acquisition_status;
 	uint8_t			dac_state_machine;
 	uint32_t		operation_counter;
-	uint16_t		dac_data[4];
-	uint16_t		acquisition_steady_value;
+	uint32_t		cycle_operation_counter;
+	//uint16_t		dac_data[4];
+	uint16_t		dac_out_value;
+	uint16_t		internal_scale_factor;
 	uint32_t		temperature_data;
 	uint32_t		vrefint_data;
-	uint32_t		calibration_wndlow;
-	uint32_t		calibration_wndhigh;
-	uint32_t		acquisition_wndlow;
-	uint32_t		acquisition_wndhigh;
 	uint32_t		calibration_value;
 	uint32_t		conductivity_value;
 }AcqSystem_TypeDef;
@@ -217,11 +218,11 @@ typedef struct
 #define	FLASH_SOME_ERRORS		0x40
 #define	FLASH_READY2FLASH		0x80
 
-#define	LINE_PROCESS_ID		1
-#define	LINE_LEN			32
+#define	LINE_PROCESS_ID				1
+#define	LINE_LEN					32
 
 #define	NUM_ANALOG_CHANNELS			3
-#define	DAC_VALUE_INDEX				0
+#define	DAC_ANALOG_INDEX			0
 #define	DAC_VREFINT_INDEX			1
 #define	DAC_TEMPERATURE_INDEX		2
 #define	NUM_CALIBRATION_CHANNELS	2
@@ -235,18 +236,21 @@ typedef struct
 #define	DAC_STATE_CLOSING_CYCLE		4
 #define	DAC_STATE_CYCLE_END			5
 
-#define	DAC_NUM_CALIBRATION			2
-
+#define	DAC_NUM_CALIBRATION			8
+#define	ADC_NUM_CALIBRATION_CYCLES	32
 #define	DAC_NUM_SINES				4
-#define	DAC_NUM_STEADY				8
+#define	DAC_NUM_ACQUISITION			32
+#define	ADC_NUM_ACQUISITION_CYCLES	256
+#define	DAC_ACQUIRE_TEMP			2
+#define	DAC_ACQUIRE_DATA			1
 #define	DAC_NUM_CLOSING				2
 
-#define	STEADY_VALUE				2048
-#define	CALIBRATION_VALUE			0
+#define	DAC_MAX_VALUE				4095
+#define	STEADY_VALUE				(DAC_MAX_VALUE / 2)
+#define	CALIBRATION_VALUE			64
 
-#define	LIMITLOW_VALUE				512
-#define	IDEAL_VALUE					STEADY_VALUE
-#define	LIMITHIGH_VALUE				3583
+#define	MINIMUM_THRESHOLD			(DAC_MAX_VALUE / 4)
+#define	MAXIMUM_THRESHOLD			(STEADY_VALUE+MINIMUM_THRESHOLD)
 
 #define	PRC1_MAILBOX_ID				1
 #define	PRC1_MAILBOX_LEN			8
