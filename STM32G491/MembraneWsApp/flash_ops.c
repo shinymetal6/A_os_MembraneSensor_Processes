@@ -20,11 +20,12 @@
  *      Author: fil
  */
 #include "main.h"
-#include "A_os_includes.h"
+
+#include "../MembraneWsApp/A_os_includes.h"
 
 
 #ifdef	MEMBRANE_2412171_00
-#include "membrane_includes.h"
+#include "../MembraneWsApp/membrane_includes.h"
 
 extern	uint8_t					*_FlashDataRam_start;
 extern	uint8_t					*_board_info_start;

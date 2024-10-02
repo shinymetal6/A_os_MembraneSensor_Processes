@@ -14,18 +14,19 @@
  * Project : A_os
 */
 /*
- * process_3.c
+ * process_4.c
  *
  *  Created on: May 20, 2024
  *      Author: fil
  */
 
 #include "main.h"
-#include "A_os_includes.h"
+
+#include "../MembraneWsApp/A_os_includes.h"
 
 #ifdef	MEMBRANE_2412171_00
 
-void process_3(uint32_t process_id)
+void process_4(uint32_t process_id)
 {
 	wait_event(HW_SLEEP_FOREVER);
 }

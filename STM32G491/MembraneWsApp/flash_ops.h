@@ -14,20 +14,21 @@
  * Project : A_os
 */
 /*
- * process_4.c
+ * flash_ops.h
  *
- *  Created on: May 20, 2024
+ *  Created on: Sep 13, 2024
  *      Author: fil
  */
 
-#include "main.h"
-#include "A_os_includes.h"
 
-#ifdef	MEMBRANE_2412171_00
+#ifndef STM32G491_MEMBRANEWSAPP_FLASH_OPS_H_
+#define STM32G491_MEMBRANEWSAPP_FLASH_OPS_H_
 
-void process_4(uint32_t process_id)
-{
-	wait_event(HW_SLEEP_FOREVER);
-}
+extern	void clear_flash_area(void);
+extern	void flash_check(uint8_t *flash_data_ptr,uint32_t size);
+extern	uint32_t do_crc(uint32_t 	*data_ptr,uint32_t flash_data_len);
+extern	void do_flash_update(uint8_t *flash_data,uint32_t size);
+extern	void do_params_update(void);
 
-#endif // #ifdef	MEMBRANE_2412171_00
+
+#endif /* STM32G491_MEMBRANEWSAPP_FLASH_OPS_H_ */

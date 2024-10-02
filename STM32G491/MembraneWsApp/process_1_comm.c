@@ -26,11 +26,12 @@
  *
  */
 #include "main.h"
-#include "A_os_includes.h"
+
+#include "../MembraneWsApp/A_os_includes.h"
 
 
 #ifdef	MEMBRANE_2412171_00
-#include "membrane_includes.h"
+#include "../MembraneWsApp/membrane_includes.h"
 
 MembraneSystem_TypeDef				MembraneSystem;
 uint8_t 							uart_rx_buffer[SENSORS_RX_LEN266+10];

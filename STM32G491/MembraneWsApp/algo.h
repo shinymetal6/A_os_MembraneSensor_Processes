@@ -21,8 +21,8 @@
  */
 
 
-#ifndef STM32G491_MEMBRANEAPP_ALGO_H_
-#define STM32G491_MEMBRANEAPP_ALGO_H_
+#ifndef STM32G491_MEMBRANEWSAPP_ALGO_H_
+#define STM32G491_MEMBRANEWSAPP_ALGO_H_
 
 
 
@@ -33,4 +33,4 @@ extern	void algo_calibration_worker(void);
 extern	void algo_acquisition_worker(void);
 
 
-#endif /* STM32G491_MEMBRANEAPP_ALGO_H_ */
+#endif /* STM32G491_MEMBRANEWSAPP_ALGO_H_ */

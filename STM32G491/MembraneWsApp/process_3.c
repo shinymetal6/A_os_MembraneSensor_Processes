@@ -14,30 +14,21 @@
  * Project : A_os
 */
 /*
- * serial_packets.h
+ * process_3.c
  *
- *  Created on: Sep 12, 2024
+ *  Created on: May 20, 2024
  *      Author: fil
  */
 
+#include "main.h"
 
-#ifndef STM32G491_MEMBRANEAPP_SERIAL_PACKETS_H_
-#define STM32G491_MEMBRANEAPP_SERIAL_PACKETS_H_
+#include "../MembraneWsApp/A_os_includes.h"
 
+#ifdef	MEMBRANE_2412171_00
 
-#define	PKT_NOT_COMPLETE		0
-#define	UPD_INFOPKT_COMPLETE	1
-#define	UPD_PKT_COMPLETE		2
-#define	UPD_PARAMS_PKT_COMPLETE	3
-#define	UPD_SINGLE_PKT_COMPLETE	4
-#define	UPD_PKT_STATREQUEST		5
-#define	UPD_START_FLASH			6
-#define	CMD_PKT_COMPLETE		7
-#define	CMD_SPECIAL_CMDS		8
-#define	CMD_INFOREQUEST_CMDS	9
+void process_3(uint32_t process_id)
+{
+	wait_event(HW_SLEEP_FOREVER);
+}
 
-extern	uint8_t packet_process_commands(void);
-extern	void send_work_uart_packet(void);
-
-
-#endif /* STM32G491_MEMBRANEAPP_SERIAL_PACKETS_H_ */
+#endif // #ifdef	MEMBRANE_2412171_00

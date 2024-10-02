@@ -14,21 +14,30 @@
  * Project : A_os
 */
 /*
- * flash_ops.h
+ * serial_packets.h
  *
- *  Created on: Sep 13, 2024
+ *  Created on: Sep 12, 2024
  *      Author: fil
  */
 
 
-#ifndef STM32G491_MEMBRANEAPP_FLASH_OPS_H_
-#define STM32G491_MEMBRANEAPP_FLASH_OPS_H_
-
-extern	void clear_flash_area(void);
-extern	void flash_check(uint8_t *flash_data_ptr,uint32_t size);
-extern	uint32_t do_crc(uint32_t 	*data_ptr,uint32_t flash_data_len);
-extern	void do_flash_update(uint8_t *flash_data,uint32_t size);
-extern	void do_params_update(void);
+#ifndef STM32G491_MEMBRANEWSAPP_SERIAL_PACKETS_H_
+#define STM32G491_MEMBRANEWSAPP_SERIAL_PACKETS_H_
 
 
-#endif /* STM32G491_MEMBRANEAPP_FLASH_OPS_H_ */
+#define	PKT_NOT_COMPLETE		0
+#define	UPD_INFOPKT_COMPLETE	1
+#define	UPD_PKT_COMPLETE		2
+#define	UPD_PARAMS_PKT_COMPLETE	3
+#define	UPD_SINGLE_PKT_COMPLETE	4
+#define	UPD_PKT_STATREQUEST		5
+#define	UPD_START_FLASH			6
+#define	CMD_PKT_COMPLETE		7
+#define	CMD_SPECIAL_CMDS		8
+#define	CMD_INFOREQUEST_CMDS	9
+
+extern	uint8_t packet_process_commands(void);
+extern	void send_work_uart_packet(void);
+
+
+#endif /* STM32G491_MEMBRANEWSAPP_SERIAL_PACKETS_H_ */

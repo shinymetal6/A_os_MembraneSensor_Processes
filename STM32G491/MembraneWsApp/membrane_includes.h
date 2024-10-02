@@ -23,9 +23,9 @@
 #ifndef STM32U575_MEMBRANE_INCLUDES_H_
 #define STM32U575_MEMBRANE_INCLUDES_H_
 
-#include "serial_packets.h"
-#include "flash_ops.h"
-#include "algo.h"
+#include "../MembraneWsApp/algo.h"
+#include "../MembraneWsApp/flash_ops.h"
+#include "../MembraneWsApp/serial_packets.h"
 
 extern	CRC_HandleTypeDef hcrc;
 #define	FLASH_CRC	hcrc

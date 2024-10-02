@@ -20,10 +20,10 @@
  *      Author: fil
  */
 #include "main.h"
-#include "A_os_includes.h"
 #include "../../CurrentVersion.h"
+#include "../MembraneWsApp/A_os_includes.h"
 #ifdef	MEMBRANE_2412171_00
-#include "membrane_includes.h"
+#include "../MembraneWsApp/membrane_includes.h"
 
 extern	void process_1_comm(uint32_t process_id);		//This is process1
 extern	void process_2_acquisition(uint32_t process_id);		//This is process2
