@@ -81,6 +81,9 @@ uint8_t ret_val = PKT_NOT_COMPLETE;
 			case SENSORS_SPECIAL_CMDS :
 				MembraneSystem.sensor_total_rxcount = SENSORS_RX_CMDLEN4;
 				break;
+			case SENSORS_INFOREQ_CMDS :
+				MembraneSystem.sensor_total_rxcount = SENSORS_RX_CMDLEN4;
+				break;
 			default:
 				MembraneSystem.sensor_rxstate = SENSORS_WAIT_INITIATOR_CHAR;
 			}
@@ -95,6 +98,11 @@ uint8_t ret_val = PKT_NOT_COMPLETE;
 				if ( MembraneSystem.sensor_rxchar == SENSORS_TERMINATOR_CHAR)
 					ret_val = CMD_SPECIAL_CMDS;
 			}
+			else if (MembraneSystem.sensor_rxbuf[1] == SENSORS_INFOREQ_CMDS)
+			{
+				if ( MembraneSystem.sensor_rxchar == SENSORS_TERMINATOR_CHAR)
+					ret_val = CMD_INFOREQUEST_CMDS;
+			}
 			else
 			{
 				if ( MembraneSystem.sensor_rxindex == (MembraneSystem.sensor_total_rxcount))
@@ -106,6 +114,9 @@ uint8_t ret_val = PKT_NOT_COMPLETE;
 						break;
 					case DOWNLOAD_PARAMS_COMMAND :
 						ret_val = UPD_PARAMS_PKT_COMPLETE;
+						break;
+					case SENSORS_INFOREQ_CMDS :
+						ret_val = CMD_INFOREQUEST_CMDS;
 						break;
 					case SINGLE_PACKET_DOWNLOAD_COMMAND :
 						ret_val = UPD_SINGLE_PKT_COMPLETE;
@@ -301,8 +312,10 @@ uint8_t ret_val = 1;
 				MembraneSystem.work_sensor_txbuf[3] = SENSORS_BOARD_TYPE;
 				MembraneSystem.work_sensor_txbuf[4] = SENSORS_TERMINATOR_CHAR;
 				MembraneSystem.work_sensor_txbuflen = 5;
+				ret_val = 0;
 				break;
 			default :
+				ret_val = 1;
 				break;
 			}
 		}
@@ -342,6 +355,18 @@ int	pnum;
 	return 0;
 }
 
+void send_sensor_info(void)
+{
+	MembraneSystem.work_sensor_txbuflen = 0;
+	if (  MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS] == MembraneInfo.board_address )
+	{
+		sprintf((char *)MembraneSystem.work_sensor_txbuf,"<IAA %s %s >",(char *)MembraneInfo.DSC_serial_string,(char *)MembraneInfo.DSC_date);
+		MembraneSystem.work_sensor_txbuflen = strlen((char *)MembraneSystem.work_sensor_txbuf);
+		MembraneSystem.work_sensor_txbuf[2] = MembraneInfo.board_address;
+		MembraneSystem.work_sensor_txbuf[3] = SENSORS_BOARD_TYPE;
+	}
+}
+
 uint8_t packet_process_commands(void)
 {
 uint8_t		assemble_result;
@@ -354,6 +379,8 @@ uint8_t 	ret_val = 1;
 			ret_val = data_packet_process();
 		else if ( assemble_result == CMD_SPECIAL_CMDS )
 			special_packet_process();
+		else if ( assemble_result == CMD_INFOREQUEST_CMDS )
+			send_sensor_info();
 		else
 			update_packet_process(assemble_result);
 	}

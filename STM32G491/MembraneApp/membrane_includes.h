@@ -45,7 +45,7 @@ extern	CRC_HandleTypeDef hcrc;
 
 #define		MAILBOX_ID				0
 #define		MAILBOX_LEN				32
-#define		SENSORS_TX_LEN			32
+#define		SENSORS_TX_LEN			256
 #define		SAMPLES_LEN				32
 #define		SENSORS_RX_LEN266		266
 #define		SENSORS_RX_CMDLEN		64
@@ -111,8 +111,10 @@ extern	CRC_HandleTypeDef hcrc;
 #define	WRITE_FLASH_COMMAND					'W'
 #define	SENSORS_GET_DATA					'A'
 #define	SENSORS_DISCOVERY					'Z'
-#define	SENSORS_SPECIAL_CMDS				'x'
+#define	SENSORS_INFOREQ_CMDS				'I'
 #define	DOWNLOAD_PARAMS_COMMAND				'P'
+#define	SENSORS_SPECIAL_CMDS				'x'
+
 #define	SENSORS_INITIATOR_CHAR				'<'
 #define	SENSORS_TERMINATOR_CHAR				'>'
 

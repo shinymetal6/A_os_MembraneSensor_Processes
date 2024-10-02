@@ -34,6 +34,7 @@
 #define	UPD_START_FLASH			6
 #define	CMD_PKT_COMPLETE		7
 #define	CMD_SPECIAL_CMDS		8
+#define	CMD_INFOREQUEST_CMDS	9
 
 extern	uint8_t packet_process_commands(void);
 extern	void send_work_uart_packet(void);
