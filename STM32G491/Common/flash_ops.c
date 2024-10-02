@@ -24,7 +24,7 @@
 #include "../MembraneWsApp/A_os_includes.h"
 
 
-#ifdef	MEMBRANE_WS_2412171_00
+#ifdef	MEMBRANE_COMMON
 #include "../MembraneWsApp/membrane_includes.h"
 
 extern	uint8_t					*_FlashDataRam_start;

@@ -22,10 +22,10 @@
 
 #include "main.h"
 
-#include "../MembraneWsApp/A_os_includes.h"
+#include "../Common/A_os_includes.h"
 
 
-#ifdef	MEMBRANE_2412171_00
+#ifdef	MEMBRANE_WS_2412171_00
 #include "../MembraneWsApp/membrane_includes.h"
 
 __attribute__ ((aligned (32)))AcqSystem_TypeDef		AcqSystem;

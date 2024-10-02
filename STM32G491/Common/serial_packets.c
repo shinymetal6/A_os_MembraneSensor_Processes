@@ -24,8 +24,14 @@
 #include "../MembraneWsApp/A_os_includes.h"
 
 
-#ifdef	MEMBRANE_WS_2412171_00
+#ifdef	MEMBRANE_COMMON
+#ifdef MEMBRANE_TEMP_2412171_00
+#include "../MembraneTempApp/membrane_includes.h"
+#endif
+#ifdef MEMBRANE_WS_2412171_00
 #include "../MembraneWsApp/membrane_includes.h"
+#endif
+
 extern	MembraneInfo_TypeDef	MembraneInfo;
 extern	uint8_t	reprog_data_area[FLASHRAM_SIZE];
 
@@ -283,6 +289,7 @@ uint8_t ret_val = 1;
 			switch ( MembraneSystem.sensor_rxbuf[SENSORS_CMD] )
 			{
 			case SENSORS_GET_DATA :
+#if SENSORS_BOARD_TYPE == WATER_SENSOR
 				MembraneSystem.work_sensor_txbuf[0] = SENSORS_INITIATOR_CHAR;
 				MembraneSystem.work_sensor_txbuf[1] = SENSORS_GET_DATA_COMMAND_REPLY;
 				MembraneSystem.work_sensor_txbuf[2] = MembraneInfo.board_address;
@@ -304,6 +311,30 @@ uint8_t ret_val = 1;
 				MembraneSystem.work_sensor_txbuf[18] = AcqSystem.temperature_data & 0xff;
 				MembraneSystem.work_sensor_txbuf[19] = SENSORS_TERMINATOR_CHAR;
 				MembraneSystem.work_sensor_txbuflen = 20;
+#endif
+#if SENSORS_BOARD_TYPE == TEMPERATURE_SENSOR
+				MembraneSystem.work_sensor_txbuf[0] = SENSORS_INITIATOR_CHAR;
+				MembraneSystem.work_sensor_txbuf[1] = SENSORS_GET_DATA_COMMAND_REPLY;
+				MembraneSystem.work_sensor_txbuf[2] = MembraneInfo.board_address;
+				MembraneSystem.work_sensor_txbuf[3] = SENSORS_BOARD_TYPE;
+				MembraneSystem.work_sensor_txbuf[4] = 'P';
+				MembraneSystem.work_sensor_txbuf[5] = AcqSystem.pt1000_data >> 8;
+				MembraneSystem.work_sensor_txbuf[6] = AcqSystem.pt1000_data & 0xff;
+				MembraneSystem.work_sensor_txbuf[7] = 'T';
+				MembraneSystem.work_sensor_txbuf[8] = AcqSystem.temperature_data >> 8;
+				MembraneSystem.work_sensor_txbuf[9] = AcqSystem.temperature_data & 0xff;
+				MembraneSystem.work_sensor_txbuf[10] = 0;
+				MembraneSystem.work_sensor_txbuf[11] = 0;
+				MembraneSystem.work_sensor_txbuf[12] = 0;
+				MembraneSystem.work_sensor_txbuf[13] = 0;
+				MembraneSystem.work_sensor_txbuf[14] = 0;
+				MembraneSystem.work_sensor_txbuf[15] = 0;
+				MembraneSystem.work_sensor_txbuf[16] = 0;
+				MembraneSystem.work_sensor_txbuf[17] = 0;
+				MembraneSystem.work_sensor_txbuf[18] = 0;
+				MembraneSystem.work_sensor_txbuf[19] = SENSORS_TERMINATOR_CHAR;
+				MembraneSystem.work_sensor_txbuflen = 20;
+#endif
 				ret_val = 0;
 				break;
 			case SENSORS_DISCOVERY :

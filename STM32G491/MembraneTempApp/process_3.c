@@ -14,7 +14,7 @@
  * Project : A_os
 */
 /*
- * process_4.c
+ * process_3.c
  *
  *  Created on: May 20, 2024
  *      Author: fil
@@ -24,9 +24,9 @@
 
 #include "../Common/A_os_includes.h"
 
-#ifdef	MEMBRANE_WS_2412171_00
+#ifdef	MEMBRANE_TEMP_2412171_00
 
-void process_4(uint32_t process_id)
+void process_3(uint32_t process_id)
 {
 	wait_event(HW_SLEEP_FOREVER);
 }

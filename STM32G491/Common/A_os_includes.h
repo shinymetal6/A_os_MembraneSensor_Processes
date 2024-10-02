@@ -14,21 +14,19 @@
  * Project : A_os
 */
 /*
- * process_4.c
+ * A_os_includes.h
  *
  *  Created on: May 20, 2024
  *      Author: fil
  */
 
-#include "main.h"
+#ifndef STM32G491_BASICPROCESSES_A_OS_INCLUDES_H_
+#define STM32G491_BASICPROCESSES_A_OS_INCLUDES_H_
 
-#include "../Common/A_os_includes.h"
+#include "../../../A_os/kernel/A.h"
+#include "../../../A_os/kernel/system_default.h"
+#include "../../../A_os/kernel/A_exported_functions.h"
+#include <stdio.h>
+#include <string.h>
 
-#ifdef	MEMBRANE_WS_2412171_00
-
-void process_4(uint32_t process_id)
-{
-	wait_event(HW_SLEEP_FOREVER);
-}
-
-#endif // #ifdef	MEMBRANE_2412171_00
+#endif /* STM32G491_BASICPROCESSES_A_OS_INCLUDES_H_ */

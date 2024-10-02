@@ -23,14 +23,13 @@
 #ifndef STM32U575_MEMBRANE_INCLUDES_H_
 #define STM32U575_MEMBRANE_INCLUDES_H_
 
-#include "algo.h"
 #include "../Common/flash_ops.h"
 #include "../Common/serial_packets.h"
 
 extern	CRC_HandleTypeDef hcrc;
 #define	FLASH_CRC	hcrc
 
-#define		APP_NAME				"G491 NOW FLASHED from PC"
+#define		APP_NAME				"MembraneTemp"
 #define		MAX_SENSORS				16
 #define		MAX_LINES				4
 #define		MAX_BOARDS				4
@@ -41,7 +40,7 @@ extern	CRC_HandleTypeDef hcrc;
 
 #define		WATER_SENSOR			1
 #define		TEMPERATURE_SENSOR		2
-#define		SENSORS_BOARD_TYPE		WATER_SENSOR
+#define		SENSORS_BOARD_TYPE		TEMPERATURE_SENSOR
 
 #define		MAILBOX_ID				0
 #define		MAILBOX_LEN				32
@@ -202,6 +201,7 @@ typedef struct
 
 typedef struct
 {
+	/*
 	uint8_t 		acquisition_status;
 	uint8_t			dac_state_machine;
 	uint32_t		operation_counter;
@@ -209,10 +209,14 @@ typedef struct
 	//uint16_t		dac_data[4];
 	uint16_t		dac_out_value;
 	uint16_t		internal_scale_factor;
+	*/
+	uint32_t		pt1000_data;
 	uint32_t		temperature_data;
 	uint32_t		vrefint_data;
+	/*
 	uint32_t		calibration_value;
 	uint32_t		conductivity_value;
+	*/
 }AcqSystem_TypeDef;
 
 /* acquisition_status */

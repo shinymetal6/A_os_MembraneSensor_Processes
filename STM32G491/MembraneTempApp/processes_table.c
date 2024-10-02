@@ -22,7 +22,8 @@
 #include "main.h"
 #include "../../CurrentVersion.h"
 #include "../Common/A_os_includes.h"
-#ifdef	MEMBRANE_WS_2412171_00
+
+#ifdef	MEMBRANE_TEMP_2412171_00
 #include "membrane_includes.h"
 
 extern	void process_1_comm(uint32_t process_id);		//This is process1
@@ -36,13 +37,13 @@ VERSIONING	uint8_t	app_version[32] 	= APP_VERSION;
 BOARDINFO_DATA_AREA	const MembraneInfo_TypeDef				MembraneFlashInfo =
 {
 		.header_string = "MembraneInfo Header",
-		.board_address = 5,
+		.board_address = 7,
 		.board_type = SENSORS_BOARD_TYPE,
 		.name_string = APP_NAME,
 		.version_string = APP_VERSION,
 		.Aos_version_string = A_OS_VERSION,
-		.DSC_serial_string = "WaterSensor",
-		.DSC_date = "WaterSensorVersion",
+		.DSC_serial_string = "TempSensor",
+		.DSC_date = "TempVersion",
 		.tail_string = "MembraneInfo Tail"
 };
 

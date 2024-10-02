@@ -22,9 +22,9 @@
 
 #include "main.h"
 
-#include "../MembraneWsApp/A_os_includes.h"
+#include "../Common/A_os_includes.h"
 
-#ifdef	MEMBRANE_2412171_00
+#ifdef	MEMBRANE_WS_2412171_00
 
 void process_3(uint32_t process_id)
 {
