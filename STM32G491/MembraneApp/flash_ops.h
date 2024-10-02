@@ -28,6 +28,7 @@ extern	void clear_flash_area(void);
 extern	void flash_check(uint8_t *flash_data_ptr,uint32_t size);
 extern	uint32_t do_crc(uint32_t 	*data_ptr,uint32_t flash_data_len);
 extern	void do_flash_update(uint8_t *flash_data,uint32_t size);
+extern	void do_params_update(void);
 
 
 #endif /* STM32G491_MEMBRANEAPP_FLASH_OPS_H_ */

@@ -33,7 +33,7 @@ extern	void process_4(uint32_t process_id);			//This is process4
 VERSIONING	uint8_t	app_name[32] 		= APP_NAME;
 VERSIONING	uint8_t	app_version[32] 	= APP_VERSION;
 
-BOARDINFO_DATA_AREA	const MembraneInfo_TypeDef	MembraneInfo =
+BOARDINFO_DATA_AREA	const MembraneInfo_TypeDef				MembraneFlashInfo =
 {
 		.header_string = "MembraneInfo Header",
 		.board_address = 5,
@@ -41,8 +41,19 @@ BOARDINFO_DATA_AREA	const MembraneInfo_TypeDef	MembraneInfo =
 		.name_string = APP_NAME,
 		.version_string = APP_VERSION,
 		.Aos_version_string = A_OS_VERSION,
+		.DSC_serial_string = "Programmed from MembraneC",
+		.DSC_date = "Unnamed version",
 		.tail_string = "MembraneInfo Tail"
 };
+
+BOARDPARAMETERS_AREA	const MembraneParameters_TypeDef	MembraneFlashParameters =
+{
+		.header_string = "MembraneParameter Header",
+		.tail_string   = "MembraneParameter Tail"
+};
+
+__attribute__ ((aligned (32)))	MembraneInfo_TypeDef		MembraneInfo;
+__attribute__ ((aligned (32)))	MembraneParameters_TypeDef	MembraneParameters;
 
 USRprcs_t	UserProcesses[USR_PROCESS_NUMBER] =
 {

@@ -26,8 +26,10 @@
 #ifdef	MEMBRANE_2412171_00
 #include "membrane_includes.h"
 
-extern	uint8_t				*_FlashDataRam_start;
-FLASHDATARAM_AREA uint8_t	reprog_data_area[FLASHRAM_SIZE];
+extern	uint8_t					*_FlashDataRam_start;
+extern	uint8_t					*_board_info_start;
+FLASHDATARAM_AREA uint8_t		reprog_data_area[FLASHRAM_SIZE];
+extern	MembraneInfo_TypeDef	MembraneInfo;
 
 uint32_t	do_crc(uint32_t *data_ptr,uint32_t flash_data_len)
 {
@@ -45,6 +47,22 @@ uint32_t	i;
 
 void do_flash_update(uint8_t *flash_data,uint32_t size)
 {
-	flash_update(flash_data,size);
+	flash_update(0,flash_data,size);
+}
+
+uint32_t	pflash_address,psize;
+uint8_t		*pflash_data;
+void local_flash_update(uint32_t flash_address,uint8_t *flash_data,uint32_t size)
+{
+	pflash_address = flash_address;
+	pflash_data = flash_data;
+	psize = size;
+}
+
+void do_params_update(void)
+{
+	pflash_address = (uint32_t )&_board_info_start-FLASH_BASE;
+	pflash_data = (uint8_t *)&MembraneInfo;
+	flash_update((uint32_t )&_board_info_start-FLASH_BASE,(uint8_t *)&MembraneInfo,FLASH_PAGE_SIZE);
 }
 #endif // #ifdef	MEMBRANE_2412171_00

@@ -30,7 +30,7 @@
 extern	CRC_HandleTypeDef hcrc;
 #define	FLASH_CRC	hcrc
 
-#define		APP_NAME				"G491 IsNowFLASHED"
+#define		APP_NAME				"G491 NOW FLASHED from PC"
 #define		MAX_SENSORS				16
 #define		MAX_LINES				4
 #define		MAX_BOARDS				4
@@ -74,10 +74,22 @@ extern	CRC_HandleTypeDef hcrc;
 #define		SENSORS_UPDATE_CRC_LL_SHIFT	0
 #define		SENSORS_UPDATE_CLOSING_FLAG	(SENSORS_UPDATE_LEN-2)
 #define		SENSORS_UPDATE_TERMINATOR	(SENSORS_UPDATE_LEN-1)
+
+/* special packet definitions */
+#define		SENSORS_SPECIAL_PARAM1			3
+#define		SENSORS_SPECIAL_PARAM2			4
+#define		SENSORS_SPECIAL_PARAM3			5
+#define		SENSORS_SPECIAL_PARAM4			6
+#define		SENSORS_SPECIAL_CLOSING_FLAG	7
+
 /* standard packet definitions */
 #define		SENSORS_STD_CLOSING_FLAG	3
 
-#define		SENSORS_ADDRESS				2
+/* special param1 definitions */
+#define		SENSORS_SPECIAL_PARAM1_GO_NORMAL				'0'
+#define		SENSORS_SPECIAL_PARAM1_GO_LISTENONLY			'1'
+#define		SENSORS_SPECIAL_PARAM1_GET_PARAMS				'2'
+#define		SENSORS_SPECIAL_PARAM1_WRITE_PARAMS				'3'
 
 #define		SENSORS_BROADCAST_ADDR	0xff
 
@@ -85,6 +97,7 @@ extern	CRC_HandleTypeDef hcrc;
 
 #define		FLASHRAM_SIZE			(SENSORS_UPDATE_PAYLOAD*256)
 #define		FLASH_PARAMETER_SIZE	(2*FLASH_PAGE_SIZE)
+#define		FLASH_INFO_SIZE			(FLASH_PAGE_SIZE)
 
 #define		MEMBRANE_DAC_WAVETABLE_SIZE	256
 /*
@@ -98,6 +111,8 @@ extern	CRC_HandleTypeDef hcrc;
 #define	WRITE_FLASH_COMMAND					'W'
 #define	SENSORS_GET_DATA					'A'
 #define	SENSORS_DISCOVERY					'Z'
+#define	SENSORS_SPECIAL_CMDS				'x'
+#define	DOWNLOAD_PARAMS_COMMAND				'P'
 #define	SENSORS_INITIATOR_CHAR				'<'
 #define	SENSORS_TERMINATOR_CHAR				'>'
 
@@ -128,6 +143,7 @@ typedef struct
 	uint32_t		sensor_check_bits[CHECK_BIT_SIZE];
 	uint32_t		sensor_check_bits_num;
 	/* sensors control */
+
 	/* update section */
 	uint32_t		flash_datalen;
 	uint32_t		flash_counter;
@@ -142,16 +158,45 @@ typedef struct
 	uint8_t			name_version_string_len;
 }MembraneSystem_TypeDef;
 
+/* sensors_status */
+#define	SENSORS_RUN				0x01
+#define	SENSORS_DAC_STARTED		0x02
+#define	SENSORS_PKT_PENDING		0x04
+#define	SENSORS_POWERED			0x08
+// not used						0x10
+// not used						0x20
+// not used						0x40
+#define	SENSORS_SPECIALMODE		0x80
+/* flash_flags */
+#define	FLASH_UPDATECMD_RXED	0x01
+#define	FLASH_DATA_PHASE		0x02
+#define	FLASH_DATA_PHASE_END	0x04
+#define	FLASH_CHECK_PHASE		0x08
+#define	FLASH_SOME_ERRORS		0x10
+#define	FLASH_PROG_PARAMS		0x20
+#define	FLASH_PROG_FW			0x40
+#define	FLASH_READY2FLASH		0x80
+
+#define	MEMBRANEINFO_STD_LEN	32
+typedef struct
+{
+	uint8_t			header_string[MEMBRANEINFO_STD_LEN];
+	uint8_t			board_address;
+	uint8_t			board_type;
+	uint8_t			name_string[MEMBRANEINFO_STD_LEN];
+	uint8_t			version_string[MEMBRANEINFO_STD_LEN];
+	uint8_t			Aos_version_string[MEMBRANEINFO_STD_LEN];
+	uint8_t			DSC_serial_string[MEMBRANEINFO_STD_LEN];
+	uint8_t			DSC_date[MEMBRANEINFO_STD_LEN];
+	uint8_t			tail_string[MEMBRANEINFO_STD_LEN];
+}MembraneInfo_TypeDef;
+
 typedef struct
 {
 	uint8_t			header_string[32];
-	uint8_t			board_address;
-	uint8_t			board_type;
-	uint8_t			name_string[32];
-	uint8_t			version_string[32];
-	uint8_t			Aos_version_string[32];
+	uint32_t		params[32];
 	uint8_t			tail_string[32];
-}MembraneInfo_TypeDef;
+}MembraneParameters_TypeDef;
 
 typedef struct
 {
@@ -168,7 +213,7 @@ typedef struct
 	uint32_t		conductivity_value;
 }AcqSystem_TypeDef;
 
-/* sensors_status */
+/* acquisition_status */
 #define	ACQ_DAC_RUN				0x01
 #define	ACQ_DAC_STARTED			0x02
 #define	ACQ_DAC_CYCLE_COMPLETE	0x04
@@ -180,43 +225,7 @@ typedef struct
 
 #define	SENSORS_WAIT_INITIATOR_CHAR			0
 #define	SENSORS_DATA_PHASE					1
-#define	SENSORS_UPDATE_PACKET_PHASE			2
-#define	SENSORS_UPDATEINFO_PACKET_PHASE		3
-#define	SENSORS_UPDATE_SINGLE_PACKET_PHASE	4
-#define	SENSORS_UPDATE_CHECK_PHASE			5
-#define	SENSORS_ACQUISITION_PACKET_PHASE	6
 
-/* sensor_rxstate */
-
-// not used									0x10
-// not used									0x20
-// not used									0x40
-// not used									0x80
-
-/* sensors_status */
-#define	SENSORS_RUN				0x01
-#define	SENSORS_DAC_STARTED		0x02
-#define	SENSORS_PKT_PENDING		0x40
-#define	SENSORS_POWERED			0x80
-
-/* usb_flags */
-#define	USB_FLAGS_LOGOSENT		0x02
-#define	USB_FLAGS_SENDINFO		0x04
-#define	USB_FLAGS_SENDDATA		0x08
-#define	USB_FLAGS_SENDREPLY		0x10
-// not used						0x20
-#define	USB_FLAGS_HEADEROK		0x40
-#define	USB_FLAGS_PKTCOMPLETE	0x80
-
-/* flash_flags */
-#define	FLASH_UPDATECMD_RXED	0x01
-#define	FLASH_DATA_PHASE		0x02
-#define	FLASH_DATA_PHASE_END	0x04
-#define	FLASH_CHECK_PHASE		0x08
-#define	FLASH_PROG_START		0x10
-// not used						0x20
-#define	FLASH_SOME_ERRORS		0x40
-#define	FLASH_READY2FLASH		0x80
 
 #define	LINE_PROCESS_ID				1
 #define	LINE_LEN					32
@@ -249,7 +258,7 @@ typedef struct
 #define	STEADY_VALUE				(DAC_MAX_VALUE / 2)
 #define	CALIBRATION_VALUE			64
 
-#define	MINIMUM_THRESHOLD			(DAC_MAX_VALUE / 4)
+#define	MINIMUM_THRESHOLD			(DAC_MAX_VALUE / 8)
 #define	MAXIMUM_THRESHOLD			(STEADY_VALUE+MINIMUM_THRESHOLD)
 
 #define	PRC1_MAILBOX_ID				1
