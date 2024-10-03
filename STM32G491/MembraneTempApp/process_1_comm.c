@@ -39,9 +39,11 @@ extern	MembraneInfo_TypeDef		MembraneFlashInfo;
 extern	MembraneInfo_TypeDef		MembraneInfo;
 extern	MembraneParameters_TypeDef	MembraneParameters;
 
-
+#define	TIME_TO_GO_SPECIAL_MODE		50
 extern	uint8_t						reprog_data_area[FLASHRAM_SIZE];
-uint32_t	sizeMembraneFlashInfo;
+uint32_t							sizeMembraneFlashInfo;
+uint32_t							time_to_special=TIME_TO_GO_SPECIAL_MODE;
+uint32_t							adcval;
 
 void process_1_comm(uint32_t process_id)
 {
@@ -53,9 +55,11 @@ uint32_t	wakeup,flags;
 	hw_receive_uart(HW_UART1,&MembraneSystem.sensor_rxchar,1,1000);
 	MembraneSystem.sensor_rxindex = 0;
 	clear_flash_area();
-
+	time_to_special=TIME_TO_GO_SPECIAL_MODE;
 	create_timer(TIMER_ID_0,100,TIMERFLAGS_FOREVER | TIMERFLAGS_ENABLED);
 	MembraneSystem.sensor_rxstate = SENSORS_WAIT_INITIATOR_CHAR;
+	time_to_special=TIME_TO_GO_SPECIAL_MODE;
+	adcval = 0;
 
 	while(1)
 	{
@@ -74,7 +78,15 @@ uint32_t	wakeup,flags;
 		if (( wakeup & WAKEUP_FROM_UART1_IRQ) == WAKEUP_FROM_UART1_IRQ)
 		{
 			if (( flags & WAKEUP_FLAGS_UART_RX) == WAKEUP_FLAGS_UART_RX)
-				packet_process_commands();
+			{
+				if (( MembraneSystem.sensors_status &  SENSORS_SPECIALMODE) == SENSORS_SPECIALMODE )
+				{
+					if ( AcqSystem.pt1000_data < 0x20 )
+						packet_process_commands();
+				}
+				else
+					packet_process_commands();
+			}
 		}
 		send_work_uart_packet();
 	}
