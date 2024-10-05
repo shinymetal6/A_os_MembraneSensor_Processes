@@ -39,20 +39,20 @@ uint8_t								mailbox_out[PRC1_MAILBOX_LEN];
 
 extern	MembraneInfo_TypeDef		MembraneFlashInfo;
 extern	MembraneInfo_TypeDef		MembraneInfo;
+extern	MembraneParameters_TypeDef	MembraneFlashParameters;
 extern	MembraneParameters_TypeDef	MembraneParameters;
 
-
 extern	uint8_t						reprog_data_area[FLASHRAM_SIZE];
-uint32_t	sizeMembraneFlashInfo;
+uint32_t							sizeMembraneFlashInfo,sizeMembraneParameters;
 
 void process_1_comm(uint32_t process_id)
 {
 uint32_t	wakeup,flags;
-//uint8_t		flash_main_counter;
-//uint8_t		flash_params_counter;
 
 	sizeMembraneFlashInfo = sizeof(MembraneFlashInfo);
-	bcopy(&MembraneFlashInfo,&MembraneInfo,sizeof(MembraneFlashInfo));
+	bcopy(&MembraneFlashInfo,&MembraneInfo,sizeMembraneFlashInfo);
+	sizeMembraneParameters = sizeof(MembraneFlashParameters);
+	bcopy(&MembraneFlashParameters,&MembraneParameters,sizeMembraneParameters);
 	allocate_hw(HW_UART1,0);
 	hw_receive_uart(HW_UART1,&MembraneSystem.sensor_rxchar,1,1000);
 	MembraneSystem.sensor_rxindex = 0;

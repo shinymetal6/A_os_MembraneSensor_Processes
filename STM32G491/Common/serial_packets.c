@@ -33,6 +33,7 @@
 #endif
 
 extern	MembraneInfo_TypeDef	MembraneInfo;
+extern	MembraneParameters_TypeDef	MembraneParameters;
 extern	uint8_t	reprog_data_area[FLASHRAM_SIZE];
 
 void set_check_bits_error(uint32_t flash_pktcntr)
@@ -83,6 +84,7 @@ uint8_t ret_val = PKT_NOT_COMPLETE;
 			case WRITE_FLASH_COMMAND :
 			case SENSORS_DISCOVERY :
 			case SENSORS_GET_DATA :
+			case SENSORS_KWRITE :
 				MembraneSystem.sensor_total_rxcount = SENSORS_RX_CMDLEN4;
 				break;
 			case SENSORS_SPECIAL_CMDS :
@@ -109,6 +111,11 @@ uint8_t ret_val = PKT_NOT_COMPLETE;
 			{
 				if ( MembraneSystem.sensor_rxchar == SENSORS_TERMINATOR_CHAR)
 					ret_val = CMD_INFOREQUEST_CMDS;
+			}
+			else if (MembraneSystem.sensor_rxbuf[1] == SENSORS_KWRITE)
+			{
+				if ( MembraneSystem.sensor_rxchar == SENSORS_TERMINATOR_CHAR)
+					ret_val = CMD_PKT_COMPLETE;
 			}
 			else
 			{
@@ -138,6 +145,7 @@ uint8_t ret_val = PKT_NOT_COMPLETE;
 						ret_val = UPD_START_FLASH;
 						break;
 					case SENSORS_DISCOVERY :
+					case SENSORS_KREAD :
 					case SENSORS_GET_DATA :
 						ret_val = CMD_PKT_COMPLETE;
 						break;
@@ -220,7 +228,7 @@ uint32_t	i;
 	}
 	else if ( assemble_result == UPD_PKT_STATREQUEST )
 	{
-		/* no broadcast allowed on UPD_PKT_STATREQUEST */
+		/* only unicast allowed on UPD_PKT_STATREQUEST */
 		if ( MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS] == MembraneInfo.board_address)
 		{
 			MembraneSystem.work_sensor_txbuf[0] = SENSORS_INITIATOR_CHAR;
@@ -251,7 +259,7 @@ uint32_t	i;
 	}
 	else if ( assemble_result == UPD_SINGLE_PKT_COMPLETE )
 	{
-		/* no broadcast allowed on UPD_SINGLE_PKT_COMPLETE */
+		/* only unicast allowed on UPD_SINGLE_PKT_COMPLETE */
 		/* SENSORS_UPDATE_PKTCNT contains the packet to be corrected */
 		if ( MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS] == MembraneInfo.board_address)
 		{
@@ -272,7 +280,7 @@ uint32_t	i;
 	}
 	else if ( assemble_result == UPD_PARAMS_PKT_COMPLETE )
 	{
-		/* only broadcast allowed on UPD_PARAMS_PKT_COMPLETE */
+		/* only unicast allowed on UPD_PARAMS_PKT_COMPLETE */
 		if ( MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS] == SENSORS_BROADCAST_ADDR)
 			MembraneSystem.flash_flags = FLASH_PROG_PARAMS | FLASH_READY2FLASH;
 	}
@@ -281,14 +289,15 @@ uint32_t	i;
 uint8_t data_packet_process(void)
 {
 uint8_t ret_val = 1;
+int 	pnum;
 	MembraneSystem.work_sensor_txbuflen = 0;
-	if (  MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS] == MembraneInfo.board_address )
+	if ( MembraneSystem.sensor_rxbuf[SENSORS_INITIATOR] == SENSORS_INITIATOR_CHAR)
 	{
-		if (( MembraneSystem.sensor_rxbuf[SENSORS_INITIATOR] == SENSORS_INITIATOR_CHAR) && ( MembraneSystem.sensor_rxbuf[SENSORS_STD_CLOSING_FLAG] == SENSORS_TERMINATOR_CHAR))
+		switch ( MembraneSystem.sensor_rxbuf[SENSORS_CMD] )
 		{
-			switch ( MembraneSystem.sensor_rxbuf[SENSORS_CMD] )
+		case SENSORS_GET_DATA :
+			if (  MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS] == MembraneInfo.board_address )
 			{
-			case SENSORS_GET_DATA :
 #if SENSORS_BOARD_TYPE == WATER_SENSOR
 				MembraneSystem.work_sensor_txbuf[0] = SENSORS_INITIATOR_CHAR;
 				MembraneSystem.work_sensor_txbuf[1] = SENSORS_GET_DATA_COMMAND_REPLY;
@@ -336,8 +345,11 @@ uint8_t ret_val = 1;
 				MembraneSystem.work_sensor_txbuflen = 20;
 #endif
 				ret_val = 0;
-				break;
-			case SENSORS_DISCOVERY :
+			}
+			break;
+		case SENSORS_DISCOVERY :
+			if (  MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS] == MembraneInfo.board_address )
+			{
 				MembraneSystem.work_sensor_txbuf[0] = SENSORS_INITIATOR_CHAR;
 				MembraneSystem.work_sensor_txbuf[1] = SENSORS_DISCOVERY_REPLY;
 				MembraneSystem.work_sensor_txbuf[2] = MembraneInfo.board_address;
@@ -345,11 +357,70 @@ uint8_t ret_val = 1;
 				MembraneSystem.work_sensor_txbuf[4] = SENSORS_TERMINATOR_CHAR;
 				MembraneSystem.work_sensor_txbuflen = 5;
 				ret_val = 0;
-				break;
-			default :
-				ret_val = 1;
-				break;
 			}
+			break;
+#if SENSORS_BOARD_TYPE == WATER_SENSOR
+		case SENSORS_KWRITE :
+			if ((MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS] == SENSORS_BROADCAST_ADDR) || ( MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS] == MembraneInfo.board_address))
+			{
+				pnum=sscanf((char *)&MembraneSystem.sensor_rxbuf[3],"%d %d %d %d %d %d",
+						&MembraneParameters.temp_threshold_low,
+						&MembraneParameters.temp_threshold_high,
+						&MembraneParameters.temp_hysteresis_K,
+						&MembraneParameters.temp_hard_limit_low,
+						&MembraneParameters.temp_hard_limit_high,
+						&MembraneParameters.temp_sine_number
+						);
+				if ( pnum != 6 )
+				{
+					ret_val = 1;
+					break;
+				}
+				/* params check */
+				if ( MembraneParameters.temp_threshold_low < PARAM_THRESHOLD_MIN)
+					MembraneParameters.temp_threshold_low = PARAM_THRESHOLD_MIN;
+				if ( MembraneParameters.temp_threshold_high > PARAM_THRESHOLD_MAX)
+					MembraneParameters.temp_threshold_high = PARAM_THRESHOLD_MAX;
+				if ( MembraneParameters.temp_hysteresis_K > PARAM_HYSTERESIS)
+					MembraneParameters.temp_hysteresis_K = PARAM_HYSTERESIS;
+				if ( MembraneParameters.temp_hard_limit_low < PARAM_HARDLIMIT_LOW)
+					MembraneParameters.temp_hard_limit_low = PARAM_HARDLIMIT_LOW;
+				if ( MembraneParameters.temp_hard_limit_high > PARAM_HARDLIMIT_HIGH)
+					MembraneParameters.temp_hard_limit_high = PARAM_HARDLIMIT_HIGH;
+				if ( MembraneParameters.temp_sine_number > (PARAM_SINE_NUMBER*2) )
+					MembraneParameters.temp_sine_number = PARAM_SINE_NUMBER*2;
+
+				MembraneParameters.threshold_low = MembraneParameters.temp_threshold_low;
+				MembraneParameters.threshold_high = MembraneParameters.temp_threshold_high;
+				MembraneParameters.hysteresis_K = MembraneParameters.temp_hysteresis_K;
+				MembraneParameters.hard_limit_low = MembraneParameters.temp_hard_limit_low;
+				MembraneParameters.hard_limit_high = MembraneParameters.temp_hard_limit_high;
+				MembraneParameters.sine_number = MembraneParameters.temp_sine_number;
+			}
+			break;
+		case SENSORS_KREAD :
+			if (  MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS] == MembraneInfo.board_address )
+			{
+				MembraneSystem.work_sensor_txbuf[0] = SENSORS_INITIATOR_CHAR;
+				MembraneSystem.work_sensor_txbuf[1] = MembraneSystem.sensor_rxbuf[SENSORS_CMD];
+				MembraneSystem.work_sensor_txbuf[2] = MembraneInfo.board_address;
+				MembraneSystem.work_sensor_txbuf[3] = SENSORS_BOARD_TYPE;
+				sprintf((char *)&MembraneSystem.work_sensor_txbuf[4]," %d %d %d %d %d %d >",
+						MembraneParameters.threshold_low,
+						MembraneParameters.threshold_high,
+						MembraneParameters.hysteresis_K,
+						MembraneParameters.hard_limit_low,
+						MembraneParameters.hard_limit_high,
+						MembraneParameters.sine_number
+						);
+				MembraneSystem.work_sensor_txbuflen = strlen((char *)&MembraneSystem.work_sensor_txbuf[4]) + 4;
+				ret_val = 0;
+			}
+			break;
+#endif
+		default :
+			ret_val = 1;
+			break;
 		}
 	}
 	return ret_val;

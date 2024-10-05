@@ -35,21 +35,27 @@ VERSIONING	uint8_t	app_version[32] 	= APP_VERSION;
 
 BOARDINFO_DATA_AREA	const MembraneInfo_TypeDef				MembraneFlashInfo =
 {
-		.header_string = "MembraneInfo Header",
+		.header_string = "MembraneInfoStart",
 		.board_address = 5,
 		.board_type = SENSORS_BOARD_TYPE,
 		.name_string = APP_NAME,
 		.version_string = APP_VERSION,
 		.Aos_version_string = A_OS_VERSION,
-		.DSC_serial_string = "WaterSensor",
-		.DSC_date = "WaterSensorVersion",
-		.tail_string = "MembraneInfo Tail"
+		.DSC_serial_string = "12345678",
+		.DSC_date = "12/10/2015",
+		.tail_string = "MembraneInfoEnd"
 };
 
 BOARDPARAMETERS_AREA	const MembraneParameters_TypeDef	MembraneFlashParameters =
 {
-		.header_string = "MembraneParameter Header",
-		.tail_string   = "MembraneParameter Tail"
+		.header_string  = "MembraneParametersStart",
+		.threshold_low  = PARAM_THRESHOLD_MIN,
+		.threshold_high = PARAM_THRESHOLD_MAX,
+		.hysteresis_K   = PARAM_HYSTERESIS,
+		.hard_limit_low = PARAM_HARDLIMIT_LOW,
+		.hard_limit_high= PARAM_HARDLIMIT_HIGH,
+		.sine_number	= PARAM_SINE_NUMBER,
+		.tail_string   = "MembraneParametersEnd"
 };
 
 __attribute__ ((aligned (32)))	MembraneInfo_TypeDef		MembraneInfo;

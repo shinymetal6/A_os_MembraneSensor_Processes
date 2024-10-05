@@ -111,6 +111,8 @@ extern	CRC_HandleTypeDef hcrc;
 #define	WRITE_FLASH_COMMAND					'W'
 #define	SENSORS_GET_DATA					'A'
 #define	SENSORS_DISCOVERY					'Z'
+#define	SENSORS_KWRITE						'K'
+#define	SENSORS_KREAD						'Q'
 #define	SENSORS_INFOREQ_CMDS				'I'
 #define	DOWNLOAD_PARAMS_COMMAND				'P'
 #define	SENSORS_SPECIAL_CMDS				'x'
@@ -196,9 +198,27 @@ typedef struct
 typedef struct
 {
 	uint8_t			header_string[32];
-	uint32_t		params[32];
+	int		threshold_low;
+	int		threshold_high;
+	int		hysteresis_K;
+	int		hard_limit_low;
+	int		hard_limit_high;
+	int		sine_number;
+	int		temp_threshold_low;
+	int		temp_threshold_high;
+	int		temp_hysteresis_K;
+	int		temp_hard_limit_low;
+	int		temp_hard_limit_high;
+	int		temp_sine_number;
 	uint8_t			tail_string[32];
 }MembraneParameters_TypeDef;
+
+#define	PARAM_THRESHOLD_MIN		512
+#define	PARAM_THRESHOLD_MAX		(DAC_MAX_VALUE-PARAM_THRESHOLD_MIN)
+#define	PARAM_HYSTERESIS		32
+#define	PARAM_HARDLIMIT_LOW		256
+#define	PARAM_HARDLIMIT_HIGH	(DAC_MAX_VALUE-PARAM_HARDLIMIT_LOW)
+#define	PARAM_SINE_NUMBER		8
 
 typedef struct
 {
@@ -206,9 +226,10 @@ typedef struct
 	uint8_t			dac_state_machine;
 	uint32_t		operation_counter;
 	uint32_t		cycle_operation_counter;
-	//uint16_t		dac_data[4];
 	uint16_t		dac_out_value;
 	uint16_t		internal_scale_factor;
+	uint8_t			threshold_low_counter;
+	uint8_t			threshold_high_counter;
 	uint32_t		temperature_data;
 	uint32_t		vrefint_data;
 	uint32_t		calibration_value;
@@ -251,7 +272,7 @@ typedef struct
 #define	ADC_NUM_CALIBRATION_CYCLES	32
 #define	DAC_NUM_SINES				4
 #define	DAC_NUM_ACQUISITION			32
-#define	ADC_NUM_ACQUISITION_CYCLES	256
+#define	ADC_NUM_ACQUISITION_CYCLES	128
 #define	DAC_ACQUIRE_TEMP			2
 #define	DAC_ACQUIRE_DATA			1
 #define	DAC_NUM_CLOSING				2
@@ -290,6 +311,6 @@ extern	void set_sensor_line_re(uint8_t re_line);
 /* acquisition */
 extern	void algo_run_acquisition(void);
 
-
+extern	uint8_t						reprog_data_area[FLASHRAM_SIZE];
 
 #endif /* STM32U575_MEMBRANE_INCLUDES_H_ */
