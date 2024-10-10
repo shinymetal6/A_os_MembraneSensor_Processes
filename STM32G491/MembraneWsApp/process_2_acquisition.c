@@ -47,11 +47,8 @@ void process_2_acquisition(uint32_t process_id)
 {
 uint32_t	wakeup,flags;
 
-	allocate_hw(HW_ADC1,0);
-	allocate_hw(HW_ADC2,0);
 	IntAdc_Init(HW_ADC1,(uint32_t *)analog_buffer,NUM_ANALOG_CHANNELS);
 	IntAdc_Init(HW_ADC2,(uint32_t *)calibration_buffer,NUM_CALIBRATION_CHANNELS);
-	allocate_hw(HW_DAC,0);
 	IntDac_Init((uint16_t *)initial_dac_sine_tab,MEMBRANE_DAC_WAVETABLE_SIZE);
 
 	algo_init();

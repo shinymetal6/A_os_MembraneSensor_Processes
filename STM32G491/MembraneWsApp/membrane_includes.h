@@ -30,7 +30,7 @@
 extern	CRC_HandleTypeDef hcrc;
 #define	FLASH_CRC	hcrc
 
-#define		APP_NAME				"G491 NOW FLASHED from PC"
+#define		APP_NAME				"M - Aos 11"
 #define		MAX_SENSORS				16
 #define		MAX_LINES				4
 #define		MAX_BOARDS				4
