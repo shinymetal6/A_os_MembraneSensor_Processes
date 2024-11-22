@@ -44,12 +44,13 @@ extern	MembraneParameters_TypeDef	MembraneParameters;
 
 extern	uint8_t						reprog_data_area[FLASHRAM_SIZE];
 uint32_t							sizeMembraneFlashInfo,sizeMembraneParameters;
-#define	 DEBUG_ALGO	1
+
+//#define	 DEBUG_ALGO	1
 #ifdef DEBUG_ALGO
 extern	AcqSystem_TypeDef		AcqSystem;
 
 uint8_t	debug_algo_tim = 0;
-uint32_t	conductivity;
+uint32_t	conductivity,adc_raw_value;
 
 #endif
 
@@ -91,6 +92,7 @@ uint32_t	wakeup,flags;
 			debug_algo_tim++;
 			if ( debug_algo_tim > 9 )
 			{
+				adc_raw_value = AcqSystem.adc_raw_value;
 				conductivity = AcqSystem.conductivity_value;
 				debug_algo_tim = 0;
 				mbx_send(ACQUISITION_PROCESS_ID,PRC1_MAILBOX_ID,mailbox_out,PRC1_MAILBOX_MSGLEN);

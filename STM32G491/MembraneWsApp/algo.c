@@ -232,7 +232,7 @@ uint32_t	i;
 		if (AcqSystem.cycle_operation_counter >= ADC_NUM_ACQUISITION_CYCLES)
 		{
 			AcqSystem.acquisition_status |= ACQ_ADC_CYCLE_COMPLETE;
-			AcqSystem.conductivity_value = 0;
+			AcqSystem.adc_raw_value = 0;
 			AcqSystem.threshold_low_counter = AcqSystem.threshold_high_counter = 0;
 			for(i=0;i<ADC_NUM_ACQUISITION_CYCLES;i++)
 			{
@@ -240,11 +240,11 @@ uint32_t	i;
 					AcqSystem.threshold_low_counter++;
 				if ( acquisition_results[i] > MembraneParameters.threshold_high)
 					AcqSystem.threshold_high_counter++;
-				AcqSystem.conductivity_value += acquisition_results[i];
+				AcqSystem.adc_raw_value += acquisition_results[i];
 			}
-			AcqSystem.conductivity_value /= ADC_NUM_ACQUISITION_CYCLES;
+			AcqSystem.adc_raw_value /= ADC_NUM_ACQUISITION_CYCLES;
 
-			if ( AcqSystem.conductivity_value < MembraneParameters.hard_limit_low)
+			if ( AcqSystem.adc_raw_value < MembraneParameters.hard_limit_low)
 			{
 				if ( AcqSystem.internal_scale_factor < 6)
 					AcqSystem.internal_scale_factor ++;
@@ -258,7 +258,7 @@ uint32_t	i;
 				}
 
 			}
-			if ( AcqSystem.conductivity_value > MembraneParameters.hard_limit_high)
+			if ( AcqSystem.adc_raw_value > MembraneParameters.hard_limit_high)
 			{
 				if ( AcqSystem.internal_scale_factor )
 					AcqSystem.internal_scale_factor --;
@@ -273,19 +273,19 @@ uint32_t	i;
 
 			}
 			/*
-			if ( AcqSystem.conductivity_value < MembraneParameters.threshold_low)
+			if ( AcqSystem.adc_raw_value < MembraneParameters.threshold_low)
 			{
 				if ( AcqSystem.internal_scale_factor < 6)
 					AcqSystem.internal_scale_factor ++;
 			}
-			if ( AcqSystem.conductivity_value > MembraneParameters.threshold_high)
+			if ( AcqSystem.adc_raw_value > MembraneParameters.threshold_high)
 			{
 				if ( AcqSystem.internal_scale_factor )
 					AcqSystem.internal_scale_factor --;
 			}
 			*/
 			IntAdc_OpAmpGain(AcqSystem.internal_scale_factor);
-			AcqSystem.conductivity_value = DAC_MAX_VALUE - AcqSystem.conductivity_value;
+			AcqSystem.conductivity_value = DAC_MAX_VALUE - AcqSystem.adc_raw_value;
 			AcqSystem.vrefint_data     = __LL_ADC_CALC_VREFANALOG_VOLTAGE(analog_buffer[DAC_VREFINT_INDEX], LL_ADC_RESOLUTION_12B);
 			AcqSystem.temperature_data = __LL_ADC_CALC_TEMPERATURE(AcqSystem.vrefint_data, analog_buffer[DAC_TEMPERATURE_INDEX], LL_ADC_RESOLUTION_12B);
 			AcqSystem.temperature_data -= 5;

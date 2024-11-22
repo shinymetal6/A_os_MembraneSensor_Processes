@@ -242,7 +242,7 @@ typedef struct
 	uint32_t		vrefint_data;
 	uint32_t		calibration_value;
 	uint32_t		conductivity_value;
-//	uint32_t		adc_raw_value;
+	uint32_t		adc_raw_value;
 }AcqSystem_TypeDef;
 
 /* acquisition_status */
