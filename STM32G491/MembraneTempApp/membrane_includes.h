@@ -110,6 +110,8 @@ extern	CRC_HandleTypeDef hcrc;
 #define	WRITE_FLASH_COMMAND					'W'
 #define	SENSORS_GET_DATA					'A'
 #define	SENSORS_DISCOVERY					'Z'
+#define	SENSORS_KWRITE						'K'
+#define	SENSORS_KREAD						'Q'
 #define	SENSORS_INFOREQ_CMDS				'I'
 #define	DOWNLOAD_PARAMS_COMMAND				'P'
 #define	SENSORS_SPECIAL_CMDS				'x'

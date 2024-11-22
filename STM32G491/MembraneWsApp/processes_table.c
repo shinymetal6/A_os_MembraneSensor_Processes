@@ -36,13 +36,13 @@ VERSIONING	uint8_t	app_version[32] 	= APP_VERSION;
 BOARDINFO_DATA_AREA	const MembraneInfo_TypeDef				MembraneFlashInfo =
 {
 		.header_string = "MembraneInfoStart",
-		.board_address = 5,
+		.board_address = 8,
 		.board_type = SENSORS_BOARD_TYPE,
 		.name_string = APP_NAME,
 		.version_string = APP_VERSION,
 		.Aos_version_string = A_OS_VERSION,
-		.DSC_serial_string = "12345678",
-		.DSC_date = "12/10/2015",
+		.DSC_serial_string = "DSC 04",
+		.DSC_date = "14/11/2024",
 		.tail_string = "MembraneInfoEnd"
 };
 
@@ -56,6 +56,12 @@ BOARDPARAMETERS_AREA	const MembraneParameters_TypeDef	MembraneFlashParameters =
 		.hard_limit_high= PARAM_HARDLIMIT_HIGH,
 		.sine_number	= PARAM_SINE_NUMBER,
 		.tail_string   = "MembraneParametersEnd"
+};
+
+__attribute__ ((aligned (32)))	const MembraneAppInfo_TypeDef	MembraneAppInfo =
+{
+		.name_string = APP_NAME,
+		.version_string = APP_VERSION,
 };
 
 __attribute__ ((aligned (32)))	MembraneInfo_TypeDef		MembraneInfo;

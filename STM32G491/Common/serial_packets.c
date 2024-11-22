@@ -93,6 +93,9 @@ uint8_t ret_val = PKT_NOT_COMPLETE;
 			case SENSORS_INFOREQ_CMDS :
 				MembraneSystem.sensor_total_rxcount = SENSORS_RX_CMDLEN4;
 				break;
+			case SENSORS_VERINFOREQ_CMDS :
+				MembraneSystem.sensor_total_rxcount = SENSORS_RX_CMDLEN4;
+				break;
 			default:
 				MembraneSystem.sensor_rxstate = SENSORS_WAIT_INITIATOR_CHAR;
 			}
@@ -131,6 +134,9 @@ uint8_t ret_val = PKT_NOT_COMPLETE;
 						break;
 					case SENSORS_INFOREQ_CMDS :
 						ret_val = CMD_INFOREQUEST_CMDS;
+						break;
+					case SENSORS_VERINFOREQ_CMDS :
+						ret_val = CMD_VERINFOREQUEST_CMDS;
 						break;
 					case SINGLE_PACKET_DOWNLOAD_COMMAND :
 						ret_val = UPD_SINGLE_PKT_COMPLETE;
@@ -246,7 +252,7 @@ uint32_t	i;
 	{
 		if (( MembraneSystem.flash_flags & FLASH_READY2FLASH) == FLASH_READY2FLASH)
 		{
-			if (( MembraneSystem.sensor_addressed_sensor != SENSORS_BROADCAST_ADDR) && (  MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS] == MembraneInfo.board_address ))
+			if ( MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS] == MembraneInfo.board_address )
 			{
 				MembraneSystem.work_sensor_txbuf[0] = SENSORS_INITIATOR_CHAR;
 				MembraneSystem.work_sensor_txbuf[1] = WRITE_FLASH_COMMAND;
@@ -289,7 +295,9 @@ uint32_t	i;
 uint8_t data_packet_process(void)
 {
 uint8_t ret_val = 1;
+#if SENSORS_BOARD_TYPE == WATER_SENSOR
 int 	pnum;
+#endif
 	MembraneSystem.work_sensor_txbuflen = 0;
 	if ( MembraneSystem.sensor_rxbuf[SENSORS_INITIATOR] == SENSORS_INITIATOR_CHAR)
 	{
@@ -470,6 +478,20 @@ void send_sensor_info(void)
 	}
 }
 
+extern	MembraneAppInfo_TypeDef	MembraneAppInfo;
+
+void send_sensor_version_info(void)
+{
+	MembraneSystem.work_sensor_txbuflen = 0;
+	if (  MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS] == MembraneInfo.board_address )
+	{
+		sprintf((char *)MembraneSystem.work_sensor_txbuf,"<JAA %s %s>",(char *)MembraneAppInfo.name_string,(char *)MembraneAppInfo.version_string);
+		MembraneSystem.work_sensor_txbuflen = strlen((char *)MembraneSystem.work_sensor_txbuf);
+		MembraneSystem.work_sensor_txbuf[2] = MembraneInfo.board_address;
+		MembraneSystem.work_sensor_txbuf[3] = SENSORS_BOARD_TYPE;
+	}
+}
+
 uint8_t packet_process_commands(void)
 {
 uint8_t		assemble_result;
@@ -484,6 +506,8 @@ uint8_t 	ret_val = 1;
 			special_packet_process();
 		else if ( assemble_result == CMD_INFOREQUEST_CMDS )
 			send_sensor_info();
+		else if ( assemble_result == CMD_VERINFOREQUEST_CMDS )
+			send_sensor_version_info();
 		else
 			update_packet_process(assemble_result);
 	}

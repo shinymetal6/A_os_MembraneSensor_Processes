@@ -30,7 +30,7 @@
 extern	CRC_HandleTypeDef hcrc;
 #define	FLASH_CRC	hcrc
 
-#define		APP_NAME				"G491 NOW FLASHED from PC"
+#define		APP_NAME				"Water Sensor 1.02"
 #define		MAX_SENSORS				16
 #define		MAX_LINES				4
 #define		MAX_BOARDS				4
@@ -116,6 +116,7 @@ extern	CRC_HandleTypeDef hcrc;
 #define	SENSORS_INFOREQ_CMDS				'I'
 #define	DOWNLOAD_PARAMS_COMMAND				'P'
 #define	SENSORS_SPECIAL_CMDS				'x'
+#define	SENSORS_VERINFOREQ_CMDS				'J'
 
 #define	SENSORS_INITIATOR_CHAR				'<'
 #define	SENSORS_TERMINATOR_CHAR				'>'
@@ -213,6 +214,13 @@ typedef struct
 	uint8_t			tail_string[32];
 }MembraneParameters_TypeDef;
 
+typedef struct
+{
+	char			name_string[MEMBRANEINFO_STD_LEN];
+	char			version_string[MEMBRANEINFO_STD_LEN];
+}MembraneAppInfo_TypeDef;
+
+
 #define	PARAM_THRESHOLD_MIN		512
 #define	PARAM_THRESHOLD_MAX		(DAC_MAX_VALUE-PARAM_THRESHOLD_MIN)
 #define	PARAM_HYSTERESIS		32
@@ -234,6 +242,7 @@ typedef struct
 	uint32_t		vrefint_data;
 	uint32_t		calibration_value;
 	uint32_t		conductivity_value;
+//	uint32_t		adc_raw_value;
 }AcqSystem_TypeDef;
 
 /* acquisition_status */

@@ -44,6 +44,14 @@ extern	MembraneParameters_TypeDef	MembraneParameters;
 
 extern	uint8_t						reprog_data_area[FLASHRAM_SIZE];
 uint32_t							sizeMembraneFlashInfo,sizeMembraneParameters;
+#define	 DEBUG_ALGO	1
+#ifdef DEBUG_ALGO
+extern	AcqSystem_TypeDef		AcqSystem;
+
+uint8_t	debug_algo_tim = 0;
+uint32_t	conductivity;
+
+#endif
 
 void process_1_comm(uint32_t process_id)
 {
@@ -79,6 +87,15 @@ uint32_t	wakeup,flags;
 
 			if (( MembraneSystem.flash_flags & (FLASH_PROG_PARAMS | FLASH_READY2FLASH) ) == (FLASH_PROG_PARAMS | FLASH_READY2FLASH))
 				do_params_update();
+#ifdef DEBUG_ALGO
+			debug_algo_tim++;
+			if ( debug_algo_tim > 9 )
+			{
+				conductivity = AcqSystem.conductivity_value;
+				debug_algo_tim = 0;
+				mbx_send(ACQUISITION_PROCESS_ID,PRC1_MAILBOX_ID,mailbox_out,PRC1_MAILBOX_MSGLEN);
+			}
+#endif
 		}
 		if (( wakeup & WAKEUP_FROM_UART1_IRQ) == WAKEUP_FROM_UART1_IRQ)
 		{

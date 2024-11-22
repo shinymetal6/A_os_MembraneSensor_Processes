@@ -35,6 +35,7 @@
 #define	CMD_PKT_COMPLETE		7
 #define	CMD_SPECIAL_CMDS		8
 #define	CMD_INFOREQUEST_CMDS	9
+#define	CMD_VERINFOREQUEST_CMDS	10
 
 extern	uint8_t packet_process_commands(void);
 extern	void send_work_uart_packet(void);
