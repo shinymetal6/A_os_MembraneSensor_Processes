@@ -38,10 +38,12 @@ BOARDINFO_DATA_AREA	const MembraneInfo_TypeDef				MembraneFlashInfo =
 		.header_string = "MembraneInfoStart",
 		.board_address = 8,
 		.board_type = SENSORS_BOARD_TYPE,
+		/*
 		.name_string = APP_NAME,
 		.version_string = APP_VERSION,
 		.Aos_version_string = A_OS_VERSION,
-		.DSC_serial_string = "DSC 04",
+		*/
+		.DSC_serial_string = "DSC 01",
 		.DSC_date = "14/11/2024",
 		.tail_string = "MembraneInfoEnd"
 };
@@ -62,6 +64,7 @@ __attribute__ ((aligned (32)))	const MembraneAppInfo_TypeDef	MembraneAppInfo =
 {
 		.name_string = APP_NAME,
 		.version_string = APP_VERSION,
+		.Aos_version_string = A_OS_VERSION,
 };
 
 __attribute__ ((aligned (32)))	MembraneInfo_TypeDef		MembraneInfo;

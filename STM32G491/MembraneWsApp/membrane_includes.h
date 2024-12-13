@@ -188,9 +188,11 @@ typedef struct
 	uint8_t			header_string[MEMBRANEINFO_STD_LEN];
 	uint8_t			board_address;
 	uint8_t			board_type;
+	/*
 	uint8_t			name_string[MEMBRANEINFO_STD_LEN];
 	uint8_t			version_string[MEMBRANEINFO_STD_LEN];
 	uint8_t			Aos_version_string[MEMBRANEINFO_STD_LEN];
+	*/
 	uint8_t			DSC_serial_string[MEMBRANEINFO_STD_LEN];
 	uint8_t			DSC_date[MEMBRANEINFO_STD_LEN];
 	uint8_t			tail_string[MEMBRANEINFO_STD_LEN];
@@ -218,6 +220,7 @@ typedef struct
 {
 	char			name_string[MEMBRANEINFO_STD_LEN];
 	char			version_string[MEMBRANEINFO_STD_LEN];
+	uint8_t			Aos_version_string[MEMBRANEINFO_STD_LEN];
 }MembraneAppInfo_TypeDef;
 
 
@@ -287,7 +290,10 @@ typedef struct
 #define	DAC_NUM_CLOSING				2
 
 #define	DAC_MAX_VALUE				4095
-#define	STEADY_VALUE				(DAC_MAX_VALUE / 2)
+//#define	STEADY_VALUE				(DAC_MAX_VALUE / 2)
+//#define	STEADY_VALUE				(4095 - (DAC_MAX_VALUE / 2))
+//#define	STEADY_VALUE				(DAC_MAX_VALUE - 1024)
+#define	STEADY_VALUE				(DAC_MAX_VALUE / 4)
 #define	CALIBRATION_VALUE			64
 
 #define	MINIMUM_THRESHOLD			(DAC_MAX_VALUE / 8)

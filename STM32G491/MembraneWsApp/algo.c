@@ -123,6 +123,8 @@ void algo_set_dac_complete(void)
 	AcqSystem.acquisition_status |= ACQ_DAC_CYCLE_COMPLETE;
 }
 
+uint16_t	adc_value = 0;
+uint16_t	dac_value = 0;
 void algo_periodic_worker(void)
 {
 	if (( AcqSystem.acquisition_status & ACQ_DAC_RUN) == ACQ_DAC_RUN)
@@ -145,7 +147,7 @@ void algo_periodic_worker(void)
 		case	DAC_STATE_CALIBRATION :
 			if (( AcqSystem.acquisition_status & ACQ_DAC_CYCLE_COMPLETE ) == ACQ_DAC_CYCLE_COMPLETE)
 			{
-				IntAdc_Stop(HW_ADC2);
+				//IntAdc_Stop(HW_ADC2);
 				IntDac_Stop();
 				IntAdc_Start(HW_ADC1);
 
@@ -176,8 +178,11 @@ void algo_periodic_worker(void)
 			if (( AcqSystem.acquisition_status & ACQ_DAC_CYCLE_COMPLETE ) == ACQ_DAC_CYCLE_COMPLETE)
 			{
 				IntAdc_Stop(HW_ADC1);
-				IntDac_Stop();
+				IntAdc_Stop(HW_ADC2);
 
+				IntDac_Stop();
+				adc_value = analog_buffer[0];
+				dac_value = calibration_buffer[0];
 				compile_table_val(closing_dac_tab);
 				IntDac_Start(DAC_NUM_CLOSING,DAC_STOP_AT_END | DAC_WAKEUP_AT_CYCLE | DAC_3ST_AT_END);
 

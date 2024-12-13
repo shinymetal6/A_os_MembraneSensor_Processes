@@ -29,8 +29,12 @@
 
 
 extern	AcqSystem_TypeDef		AcqSystem;
-
+/* adc1 in1 vopamp -> byte 0 */
+/* adc1 vrefint    -> byte 1 */
+/* adc1 temp       -> byte 2 */
 extern	 uint16_t	analog_buffer[NUM_ANALOG_CHANNELS];
+/* adc2 in4 connected to dac -> byte 0 */
+/* adc2 in2 connected input  -> byte 1 */
 extern	 uint16_t	calibration_buffer[NUM_CALIBRATION_CHANNELS];
 
 extern	 uint16_t 	steady_dac_tab[MEMBRANE_DAC_WAVETABLE_SIZE];
