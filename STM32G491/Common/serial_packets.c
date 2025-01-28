@@ -465,6 +465,22 @@ int	pnum;
 	}
 	return 0;
 }
+#define	ALTERNATE_NAME_VERSION
+#ifdef ALTERNATE_NAME_VERSION
+#ifdef	MEMBRANE_WS_2412171_00
+#define	LOCAL_NAME		"Membrane Water Sensor "
+#endif
+
+#ifdef	MEMBRANE_TEMP_2412171_00
+#define	LOCAL_NAME		"Membrane Temperature Sensor "
+#endif
+
+#define	LOCAL_VERSION	"1.1.0 Aos V2024.10.00 27-01-25 "
+
+char	localname[48],localversion[48];
+#endif
+
+extern	MembraneAppInfo_TypeDef	MembraneAppInfo;
 
 void send_sensor_info(void)
 {
@@ -478,14 +494,18 @@ void send_sensor_info(void)
 	}
 }
 
-extern	MembraneAppInfo_TypeDef	MembraneAppInfo;
-
 void send_sensor_version_info(void)
 {
 	MembraneSystem.work_sensor_txbuflen = 0;
 	if (  MembraneSystem.sensor_rxbuf[SENSORS_ADDRESS] == MembraneInfo.board_address )
 	{
+#ifdef ALTERNATE_NAME_VERSION
+		sprintf(localname,LOCAL_NAME);
+		sprintf(localversion,LOCAL_VERSION);
+		sprintf((char *)MembraneSystem.work_sensor_txbuf,"<JAA %s %s >",localname,localversion);
+#else
 		sprintf((char *)MembraneSystem.work_sensor_txbuf,"<JAA %s %s>",(char *)MembraneAppInfo.name_string,(char *)MembraneAppInfo.version_string);
+#endif
 		MembraneSystem.work_sensor_txbuflen = strlen((char *)MembraneSystem.work_sensor_txbuf);
 		MembraneSystem.work_sensor_txbuf[2] = MembraneInfo.board_address;
 		MembraneSystem.work_sensor_txbuf[3] = SENSORS_BOARD_TYPE;
